@@ -19,7 +19,7 @@ spec:
     helm:
       releaseName: kyverno-policies
       values: |
-        podSecurityStandard: baseline
+        podSecurityStandard: restricted
         validationFailureAction: Audit
         background: true
 
