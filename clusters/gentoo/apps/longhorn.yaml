@@ -5,17 +5,58 @@ metadata:
   namespace: argocd
 spec:
   syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
   project: default
   sources:
     - chart: longhorn
       repoURL: https://charts.longhorn.io/
-      targetRevision: v1.11.1 
+      targetRevision: v1.11.1
       helm:
-        values: |
+        releaseName: longhorn
+        valuesObject:
           preUpgradeChecker:
             jobEnabled: false
+          defaultSettings:
+            createDefaultDiskLabeledNodes: true
+            defaultDataPath: /var/lib/longhorn
+            defaultReplicaCount: 2
+            storageMinimalAvailablePercentage: 15
+            storageOverProvisioningPercentage: 100
+          ingress:
+            enabled: true
+            host: longhorn.gentoo.lan
+            ingressClassName: traefik
+          longhornUI:
+            replicas: 1
+          persistence:
+            defaultClass: false
+            defaultClassReplicaCount: 2
+            defaultFsType: ext4
+            reclaimPolicy: Retain
+          extraObjects:
+            - apiVersion: storage.k8s.io/v1
+              kind: StorageClass
+              metadata:
+                name: longhorn-rwo
+              provisioner: driver.longhorn.io
+              allowVolumeExpansion: true
+              reclaimPolicy: Retain
+              volumeBindingMode: WaitForFirstConsumer
+              parameters:
+                numberOfReplicas: "2"
+                staleReplicaTimeout: "30"
+                fromBackup: ""
+                fsType: ext4
+                dataLocality: disabled
+                unmapMarkSnapChainRemoved: ignored
+                disableRevisionCounter: "true"
+                dataEngine: v1
+                backupTargetName: default
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
