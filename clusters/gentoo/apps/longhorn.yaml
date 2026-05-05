@@ -28,9 +28,7 @@ spec:
             storageMinimalAvailablePercentage: 15
             storageOverProvisioningPercentage: 100
           ingress:
-            enabled: true
-            host: longhorn.gentoo.lan
-            ingressClassName: traefik
+            enabled: false
           longhornUI:
             replicas: 1
           persistence:
