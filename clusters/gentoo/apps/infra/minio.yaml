@@ -19,6 +19,10 @@ spec:
         replicas: 1
 
         existingSecret: minio-root-credentials
+        extraSecret: minio-root-credentials
+
+        environment:
+          MINIO_SSE_AUTO_ENCRYPTION: "on"
 
         persistence:
           enabled: true
