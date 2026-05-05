@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: registry
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
 
@@ -13,9 +15,41 @@ spec:
     helm:
       releaseName: zot
       valuesObject:
-        persistence:
-          enabled: true
-          size: 30Gi
+        mountConfig: true
+        configFiles:
+          config.json: |
+            {
+              "storage": {
+                "rootDirectory": "/var/lib/registry",
+                "storageDriver": {
+                  "name": "s3",
+                  "region": "us-east-1",
+                  "regionendpoint": "http://minio.minio.svc.cluster.local:9000",
+                  "bucket": "zot",
+                  "secure": false,
+                  "forcepathstyle": true
+                }
+              },
+              "http": {
+                "address": "0.0.0.0",
+                "port": "5000"
+              },
+              "log": {
+                "level": "debug"
+              }
+            }
+
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: zot-s3-credentials
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: zot-s3-credentials
+                key: AWS_SECRET_ACCESS_KEY
 
         service:
           type: ClusterIP

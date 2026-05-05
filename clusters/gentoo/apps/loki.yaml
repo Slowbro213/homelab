@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: loki
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
 
@@ -14,18 +16,48 @@ spec:
       releaseName: loki
       valuesObject:
         deploymentMode: SingleBinary
+        global:
+          extraArgs:
+            - -config.expand-env=true
+          extraEnvFrom:
+            - secretRef:
+                name: loki-s3-credentials
 
         loki:
           auth_enabled: false
           commonConfig:
             replication_factor: 1
           storage:
-            type: filesystem
+            type: s3
+            bucketNames:
+              chunks: loki
+              ruler: loki
+              admin: loki
+            s3:
+              endpoint: minio.minio.svc.cluster.local:9000
+              region: us-east-1
+              accessKeyId: ${MINIO_LOKI_ACCESS_KEY}
+              secretAccessKey: ${MINIO_LOKI_SECRET_KEY}
+              s3ForcePathStyle: true
+              insecure: true
+          storage_config:
+            aws:
+              endpoint: minio.minio.svc.cluster.local:9000
+              region: us-east-1
+              bucketnames: loki
+              access_key_id: ${MINIO_LOKI_ACCESS_KEY}
+              secret_access_key: ${MINIO_LOKI_SECRET_KEY}
+              s3forcepathstyle: true
+              insecure: true
+            tsdb_shipper:
+              active_index_directory: /var/loki/index
+              cache_location: /var/loki/index_cache
+              cache_ttl: 24h
           schemaConfig:
             configs:
               - from: "2024-04-01"
                 store: tsdb
-                object_store: filesystem
+                object_store: s3
                 schema: v13
                 index:
                   prefix: loki_index_
@@ -37,8 +69,8 @@ spec:
           replicas: 1
           persistence:
             enabled: true
-            storageClass: local-path
-            size: 20Gi
+            storageClass: longhorn-rwo
+            size: 10Gi
           resources:
             requests:
               cpu: 100m
