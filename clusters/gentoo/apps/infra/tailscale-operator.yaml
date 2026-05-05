@@ -14,7 +14,6 @@ spec:
       values: |
         operatorConfig:
           podSecurityContext:
-            runAsNonRoot: true
             seccompProfile:
               type: RuntimeDefault
           securityContext:
