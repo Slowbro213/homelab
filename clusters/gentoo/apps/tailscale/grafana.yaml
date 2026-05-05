@@ -1,23 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: object-storage-secrets
+  name: grafana-tailscale
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "-10"
 spec:
   project: default
   source:
     repoURL: https://github.com/Slowbro213/homelab.git
     targetRevision: main
-    path: apps/object-storage-secrets
-    kustomize:
-      buildOptions: --enable-alpha-plugins --enable-exec
+    path: apps/tailscale/grafana
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: monitoring
   syncPolicy:
     automated:
       enabled: true
-      prune: false
+      prune: true
       selfHeal: true

@@ -1,25 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: grafana-secrets
+  name: longhorn-tailscale
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "-9"
 spec:
   project: default
   source:
     repoURL: https://github.com/Slowbro213/homelab.git
     targetRevision: main
-    path: apps/grafana-secrets
-    kustomize:
-      buildOptions: --enable-alpha-plugins --enable-exec
+    path: apps/tailscale/longhorn
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
+    namespace: longhorn-system
   syncPolicy:
     automated:
       enabled: true
-      prune: false
+      prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
