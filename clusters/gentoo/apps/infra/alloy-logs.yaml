@@ -13,10 +13,24 @@ spec:
     helm:
       releaseName: alloy-logs
       valuesObject:
+        global:
+          podSecurityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+
         controller:
           type: daemonset
 
         alloy:
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+
           configMap:
             create: true
             content: |
@@ -77,6 +91,15 @@ spec:
 
         rbac:
           create: true
+
+        configReloader:
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
 
   destination:
     server: https://kubernetes.default.svc

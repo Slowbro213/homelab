@@ -25,6 +25,35 @@ spec:
           storageClass: longhorn-rwo
           size: 50Gi
 
+        securityContext:
+          enabled: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          seccompProfile:
+            type: RuntimeDefault
+
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+          seccompProfile:
+            type: RuntimeDefault
+
+        postJob:
+          securityContext:
+            enabled: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+
         resources:
           requests:
             cpu: 100m

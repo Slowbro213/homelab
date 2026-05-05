@@ -12,7 +12,18 @@ spec:
     helm:
       releaseName: tailscale-operator
       values: |
-        {}
+        operatorConfig:
+          podSecurityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
   destination:
     server: https://kubernetes.default.svc
     namespace: tailscale
