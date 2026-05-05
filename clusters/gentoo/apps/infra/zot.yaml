@@ -17,7 +17,9 @@ spec:
       valuesObject:
         mountConfig: true
         podSecurityContext:
-          runAsNonRoot: true
+          fsGroup: 10001
+          runAsGroup: 10001
+          runAsUser: 10001
           seccompProfile:
             type: RuntimeDefault
         securityContext:
@@ -25,6 +27,7 @@ spec:
           capabilities:
             drop:
               - ALL
+          runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
         configFiles:
