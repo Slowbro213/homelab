@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: registry
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: http://zotregistry.dev/helm-charts/
+    chart: zot
+    targetRevision: 0.1.112
+    helm:
+      releaseName: zot
+      valuesObject:
+        persistence:
+          enabled: true
+          size: 30Gi
+
+        service:
+          type: ClusterIP
+          port: 5000
+
+        ingress:
+          enabled: true
+          className: traefik
+          hosts:
+            - host: registry.gentoo.lan
+              paths:
+                - path: /
+                  pathType: Prefix
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: registry
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

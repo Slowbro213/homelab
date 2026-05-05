@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana-tailscale
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Slowbro213/homelab.git
+    targetRevision: main
+    path: apps/grafana-tailscale
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true

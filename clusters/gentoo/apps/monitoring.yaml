@@ -1,0 +1,92 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 84.5.0
+    helm:
+      releaseName: monitoring
+      valuesObject:
+        grafana:
+          admin:
+            existingSecret: grafana-secrets
+            userKey: admin-user
+            passwordKey: admin-password
+
+          service:
+            type: ClusterIP
+
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            hosts:
+              - grafana.gentoo.lan
+            path: /
+            pathType: Prefix
+
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki-gateway.logging.svc.cluster.local
+              isDefault: false
+
+        prometheusOperator:
+          admissionWebhooks:
+            enabled: false
+
+        prometheus-node-exporter:
+          hostRootFsMount:
+            enabled: false
+
+        prometheus:
+          prometheusSpec:
+            retention: 7d
+            retentionSize: 8GB
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 1536Mi
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: longhorn-rwo
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 12Gi
+
+        alertmanager:
+          enabled: true
+          alertmanagerSpec:
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: longhorn-rwo
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 1Gi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
