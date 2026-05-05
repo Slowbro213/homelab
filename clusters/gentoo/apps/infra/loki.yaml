@@ -121,7 +121,7 @@ spec:
               type: RuntimeDefault
 
         lokiCanary:
-          enabled: false
+          enabled: true
 
         backend:
           replicas: 0
