@@ -70,16 +70,6 @@ spec:
                     - monitoring
                   names:
                     - monitoring-prometheus-node-exporter*
-          disallow-host-path:
-            any:
-              - resources:
-                  kinds:
-                    - DaemonSet
-                    - Pod
-                  namespaces:
-                    - monitoring
-                  names:
-                    - monitoring-prometheus-node-exporter*
           restrict-volume-types:
             any:
               - resources:
