@@ -1,0 +1,107 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minio
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  project: default
+
+  source:
+    repoURL: https://charts.min.io/
+    chart: minio
+    targetRevision: 5.4.0
+    helm:
+      releaseName: minio
+      valuesObject:
+        mode: standalone
+        replicas: 1
+
+        existingSecret: minio-root-credentials
+
+        persistence:
+          enabled: true
+          storageClass: longhorn-rwo
+          size: 50Gi
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 2Gi
+
+        service:
+          type: ClusterIP
+          port: 9000
+
+        consoleService:
+          type: ClusterIP
+          port: 9001
+
+        buckets:
+          - name: loki
+            policy: none
+            purge: false
+            versioning: false
+          - name: zot
+            policy: none
+            purge: false
+            versioning: false
+
+        policies:
+          - name: loki
+            statements:
+              - resources:
+                  - "arn:aws:s3:::loki"
+                actions:
+                  - "s3:GetBucketLocation"
+                  - "s3:ListBucket"
+                  - "s3:ListBucketMultipartUploads"
+              - resources:
+                  - "arn:aws:s3:::loki/*"
+                actions:
+                  - "s3:AbortMultipartUpload"
+                  - "s3:DeleteObject"
+                  - "s3:GetObject"
+                  - "s3:ListMultipartUploadParts"
+                  - "s3:PutObject"
+          - name: zot
+            statements:
+              - resources:
+                  - "arn:aws:s3:::zot"
+                actions:
+                  - "s3:GetBucketLocation"
+                  - "s3:ListBucket"
+                  - "s3:ListBucketMultipartUploads"
+              - resources:
+                  - "arn:aws:s3:::zot/*"
+                actions:
+                  - "s3:AbortMultipartUpload"
+                  - "s3:DeleteObject"
+                  - "s3:GetObject"
+                  - "s3:ListMultipartUploadParts"
+                  - "s3:PutObject"
+
+        users:
+          - accessKey: loki
+            existingSecret: minio-loki-credentials
+            existingSecretKey: secretKey
+            policy: loki
+          - accessKey: zot
+            existingSecret: minio-zot-credentials
+            existingSecretKey: secretKey
+            policy: zot
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: minio
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

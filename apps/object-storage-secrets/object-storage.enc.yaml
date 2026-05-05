@@ -1,0 +1,184 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: minio
+sops:
+    age:
+        - recipient: age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWa05WUzZQbXFhQURWRURV
+            dVN6YjNQUGs0UGg1RlBHckNWblZnU1gzeVJVCm9ka2F0cy9sSS9TYlVib1kxckY0
+            L1NkTnJyOTRSUG9oRGtXNUxxRjJOQ00KLS0tIFAvUHhoWHp2Z1RNcFpUVUpQT25K
+            Nm5HQzVRTjQ3KzM0RXJKUzR1MFVjN0EKd0njiX+PvwOgicsDSb87+tJmU2uEgHhH
+            v3tK7+ItZnwn7x4qPdUaHMnupMQio/f1xfd370fMXpxZPxrADk7UdA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-05T09:02:01Z"
+    mac: ENC[AES256_GCM,data:2EzyHlCN+/Ugadf3zz9fon/FQuUwnpODQBArWZFrRjiBrXUeQwVwBaFLnXV4yyWhIUkFVj0TUdRMuaCZPK4YDRPmmP5bxs+2YG757AAB1/GUj1QIjMEZ5X6gWhPhkMvH2qTVF3cIRLg07jGv4SPDWyvWtMBZB8XQOGI4x4QgDbQ=,iv:pFiHLQvv+Rz/VtKuN+6A3Xoa8NpCFXr099OgWyiFjoo=,tag:DWUhavmMWL9Zfm/kBPHpHg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: logging
+sops:
+    age:
+        - recipient: age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWa05WUzZQbXFhQURWRURV
+            dVN6YjNQUGs0UGg1RlBHckNWblZnU1gzeVJVCm9ka2F0cy9sSS9TYlVib1kxckY0
+            L1NkTnJyOTRSUG9oRGtXNUxxRjJOQ00KLS0tIFAvUHhoWHp2Z1RNcFpUVUpQT25K
+            Nm5HQzVRTjQ3KzM0RXJKUzR1MFVjN0EKd0njiX+PvwOgicsDSb87+tJmU2uEgHhH
+            v3tK7+ItZnwn7x4qPdUaHMnupMQio/f1xfd370fMXpxZPxrADk7UdA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-05T09:02:01Z"
+    mac: ENC[AES256_GCM,data:2EzyHlCN+/Ugadf3zz9fon/FQuUwnpODQBArWZFrRjiBrXUeQwVwBaFLnXV4yyWhIUkFVj0TUdRMuaCZPK4YDRPmmP5bxs+2YG757AAB1/GUj1QIjMEZ5X6gWhPhkMvH2qTVF3cIRLg07jGv4SPDWyvWtMBZB8XQOGI4x4QgDbQ=,iv:pFiHLQvv+Rz/VtKuN+6A3Xoa8NpCFXr099OgWyiFjoo=,tag:DWUhavmMWL9Zfm/kBPHpHg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.2
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: minio-root-credentials
+    namespace: minio
+type: Opaque
+stringData:
+    rootUser: ENC[AES256_GCM,data:5BAGOxWzQvbsSA==,iv:E5DC6nCYlgXlVcurknFBgMLOgM1hZWSIHVq9FP8k/3k=,tag:Iv8IKpKsS2vgpQRgMcv8Cg==,type:str]
+    rootPassword: ENC[AES256_GCM,data:26H5GP1Hsvdyuzqdm0AoSa0b1xSM7R7jKuEQ17PDbVk4LTb1I6Fksryj1oNA4ztB,iv:BY6Bkw57aHE5dF42lUiK0lQLDi18W25bT6dX1Up2sWs=,tag:l5i7pctf76DFoz8Lf944/Q==,type:str]
+sops:
+    age:
+        - recipient: age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWa05WUzZQbXFhQURWRURV
+            dVN6YjNQUGs0UGg1RlBHckNWblZnU1gzeVJVCm9ka2F0cy9sSS9TYlVib1kxckY0
+            L1NkTnJyOTRSUG9oRGtXNUxxRjJOQ00KLS0tIFAvUHhoWHp2Z1RNcFpUVUpQT25K
+            Nm5HQzVRTjQ3KzM0RXJKUzR1MFVjN0EKd0njiX+PvwOgicsDSb87+tJmU2uEgHhH
+            v3tK7+ItZnwn7x4qPdUaHMnupMQio/f1xfd370fMXpxZPxrADk7UdA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-05T09:02:01Z"
+    mac: ENC[AES256_GCM,data:2EzyHlCN+/Ugadf3zz9fon/FQuUwnpODQBArWZFrRjiBrXUeQwVwBaFLnXV4yyWhIUkFVj0TUdRMuaCZPK4YDRPmmP5bxs+2YG757AAB1/GUj1QIjMEZ5X6gWhPhkMvH2qTVF3cIRLg07jGv4SPDWyvWtMBZB8XQOGI4x4QgDbQ=,iv:pFiHLQvv+Rz/VtKuN+6A3Xoa8NpCFXr099OgWyiFjoo=,tag:DWUhavmMWL9Zfm/kBPHpHg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.2
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: minio-loki-credentials
+    namespace: minio
+type: Opaque
+stringData:
+    accessKey: ENC[AES256_GCM,data:4qXQVw==,iv:ahge7IggVUExLn8jaUSSQw60i4ohxEyo1Gz/3xOTGfE=,tag:+fotpf3XgH1hw2/q3s27Pg==,type:str]
+    secretKey: ENC[AES256_GCM,data:5yxMb7swfs1b84IYoHyusgghXrYtl20Wpu+Del9EVqx7otKNltFx/9HiCozKjUn4,iv:qQxejxBrNmv8iy7t/V9aZI9Nj1G4cUnk3NUrn2XiGYM=,tag:aZyf3PunCsKIIVqgzoCQAA==,type:str]
+sops:
+    age:
+        - recipient: age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWa05WUzZQbXFhQURWRURV
+            dVN6YjNQUGs0UGg1RlBHckNWblZnU1gzeVJVCm9ka2F0cy9sSS9TYlVib1kxckY0
+            L1NkTnJyOTRSUG9oRGtXNUxxRjJOQ00KLS0tIFAvUHhoWHp2Z1RNcFpUVUpQT25K
+            Nm5HQzVRTjQ3KzM0RXJKUzR1MFVjN0EKd0njiX+PvwOgicsDSb87+tJmU2uEgHhH
+            v3tK7+ItZnwn7x4qPdUaHMnupMQio/f1xfd370fMXpxZPxrADk7UdA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-05T09:02:01Z"
+    mac: ENC[AES256_GCM,data:2EzyHlCN+/Ugadf3zz9fon/FQuUwnpODQBArWZFrRjiBrXUeQwVwBaFLnXV4yyWhIUkFVj0TUdRMuaCZPK4YDRPmmP5bxs+2YG757AAB1/GUj1QIjMEZ5X6gWhPhkMvH2qTVF3cIRLg07jGv4SPDWyvWtMBZB8XQOGI4x4QgDbQ=,iv:pFiHLQvv+Rz/VtKuN+6A3Xoa8NpCFXr099OgWyiFjoo=,tag:DWUhavmMWL9Zfm/kBPHpHg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.2
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: loki-s3-credentials
+    namespace: logging
+type: Opaque
+stringData:
+    MINIO_LOKI_ACCESS_KEY: ENC[AES256_GCM,data:fGm/Lw==,iv:XE1NMjAS4CDZtifFB+15Pi+JOdlc+9s/4aFK4IQrqYE=,tag:azlqaFsEWANb2oVgmyWTSA==,type:str]
+    MINIO_LOKI_SECRET_KEY: ENC[AES256_GCM,data:cUlzw8l1rWqE4VhZ/RbrBHJsiVMGicG1f+c8bDNoBasu4rViJfSm5ZEbScFi3Fdw,iv:7NL+iZM32IndMuBv3UBAy5JGJlgb/RZQdeBTO03bHgg=,tag:lmn3SEoUEW0zWdrQ44HLXg==,type:str]
+sops:
+    age:
+        - recipient: age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWa05WUzZQbXFhQURWRURV
+            dVN6YjNQUGs0UGg1RlBHckNWblZnU1gzeVJVCm9ka2F0cy9sSS9TYlVib1kxckY0
+            L1NkTnJyOTRSUG9oRGtXNUxxRjJOQ00KLS0tIFAvUHhoWHp2Z1RNcFpUVUpQT25K
+            Nm5HQzVRTjQ3KzM0RXJKUzR1MFVjN0EKd0njiX+PvwOgicsDSb87+tJmU2uEgHhH
+            v3tK7+ItZnwn7x4qPdUaHMnupMQio/f1xfd370fMXpxZPxrADk7UdA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-05T09:02:01Z"
+    mac: ENC[AES256_GCM,data:2EzyHlCN+/Ugadf3zz9fon/FQuUwnpODQBArWZFrRjiBrXUeQwVwBaFLnXV4yyWhIUkFVj0TUdRMuaCZPK4YDRPmmP5bxs+2YG757AAB1/GUj1QIjMEZ5X6gWhPhkMvH2qTVF3cIRLg07jGv4SPDWyvWtMBZB8XQOGI4x4QgDbQ=,iv:pFiHLQvv+Rz/VtKuN+6A3Xoa8NpCFXr099OgWyiFjoo=,tag:DWUhavmMWL9Zfm/kBPHpHg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: registry
+sops:
+    age:
+        - recipient: age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWa05WUzZQbXFhQURWRURV
+            dVN6YjNQUGs0UGg1RlBHckNWblZnU1gzeVJVCm9ka2F0cy9sSS9TYlVib1kxckY0
+            L1NkTnJyOTRSUG9oRGtXNUxxRjJOQ00KLS0tIFAvUHhoWHp2Z1RNcFpUVUpQT25K
+            Nm5HQzVRTjQ3KzM0RXJKUzR1MFVjN0EKd0njiX+PvwOgicsDSb87+tJmU2uEgHhH
+            v3tK7+ItZnwn7x4qPdUaHMnupMQio/f1xfd370fMXpxZPxrADk7UdA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-05T09:02:01Z"
+    mac: ENC[AES256_GCM,data:2EzyHlCN+/Ugadf3zz9fon/FQuUwnpODQBArWZFrRjiBrXUeQwVwBaFLnXV4yyWhIUkFVj0TUdRMuaCZPK4YDRPmmP5bxs+2YG757AAB1/GUj1QIjMEZ5X6gWhPhkMvH2qTVF3cIRLg07jGv4SPDWyvWtMBZB8XQOGI4x4QgDbQ=,iv:pFiHLQvv+Rz/VtKuN+6A3Xoa8NpCFXr099OgWyiFjoo=,tag:DWUhavmMWL9Zfm/kBPHpHg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.2
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: minio-zot-credentials
+    namespace: minio
+type: Opaque
+stringData:
+    accessKey: ENC[AES256_GCM,data:uRmY,iv:KR3Hiu/j+gJ8Kc2jDnqz6rvW/jzEjFdDH4rbYq6KpmM=,tag:svdvSfmQBnmSlnHhDD7H2w==,type:str]
+    secretKey: ENC[AES256_GCM,data:fR/RWu3qYRqgg5DcFYVg5dLgBME6735kb9m6evF7Pg03bXkFj91l9P4eSlMxrJjV,iv:rP9BKKNuPYIPxD2XLmP2nCPWy6Jm622zTODwSaQ4hkE=,tag:EDsrgIXO6AbGKTZtbaS3oA==,type:str]
+sops:
+    age:
+        - recipient: age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWa05WUzZQbXFhQURWRURV
+            dVN6YjNQUGs0UGg1RlBHckNWblZnU1gzeVJVCm9ka2F0cy9sSS9TYlVib1kxckY0
+            L1NkTnJyOTRSUG9oRGtXNUxxRjJOQ00KLS0tIFAvUHhoWHp2Z1RNcFpUVUpQT25K
+            Nm5HQzVRTjQ3KzM0RXJKUzR1MFVjN0EKd0njiX+PvwOgicsDSb87+tJmU2uEgHhH
+            v3tK7+ItZnwn7x4qPdUaHMnupMQio/f1xfd370fMXpxZPxrADk7UdA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-05T09:02:01Z"
+    mac: ENC[AES256_GCM,data:2EzyHlCN+/Ugadf3zz9fon/FQuUwnpODQBArWZFrRjiBrXUeQwVwBaFLnXV4yyWhIUkFVj0TUdRMuaCZPK4YDRPmmP5bxs+2YG757AAB1/GUj1QIjMEZ5X6gWhPhkMvH2qTVF3cIRLg07jGv4SPDWyvWtMBZB8XQOGI4x4QgDbQ=,iv:pFiHLQvv+Rz/VtKuN+6A3Xoa8NpCFXr099OgWyiFjoo=,tag:DWUhavmMWL9Zfm/kBPHpHg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.2
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: zot-s3-credentials
+    namespace: registry
+type: Opaque
+stringData:
+    AWS_ACCESS_KEY_ID: ENC[AES256_GCM,data:aCua,iv:B44OQB9gVzQ0b6I0EyJNnwWS8UrQcA6aWRCnKt1+hZY=,tag:EffmT916FADvfEw/6zCVTQ==,type:str]
+    AWS_SECRET_ACCESS_KEY: ENC[AES256_GCM,data:8phARWrsAn2YN533VAH8+3sXVFgdk1JLT6FBFm+8r8eYchSSqRPxRIIEZfwajPN7,iv:7CmKW0oFzaDQk/eIBqnDVYmS7B+10rcWMh7jP0ohS8E=,tag:xMPsgPtc7qxGvweNIIjRHA==,type:str]
+sops:
+    age:
+        - recipient: age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWa05WUzZQbXFhQURWRURV
+            dVN6YjNQUGs0UGg1RlBHckNWblZnU1gzeVJVCm9ka2F0cy9sSS9TYlVib1kxckY0
+            L1NkTnJyOTRSUG9oRGtXNUxxRjJOQ00KLS0tIFAvUHhoWHp2Z1RNcFpUVUpQT25K
+            Nm5HQzVRTjQ3KzM0RXJKUzR1MFVjN0EKd0njiX+PvwOgicsDSb87+tJmU2uEgHhH
+            v3tK7+ItZnwn7x4qPdUaHMnupMQio/f1xfd370fMXpxZPxrADk7UdA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-05T09:02:01Z"
+    mac: ENC[AES256_GCM,data:2EzyHlCN+/Ugadf3zz9fon/FQuUwnpODQBArWZFrRjiBrXUeQwVwBaFLnXV4yyWhIUkFVj0TUdRMuaCZPK4YDRPmmP5bxs+2YG757AAB1/GUj1QIjMEZ5X6gWhPhkMvH2qTVF3cIRLg07jGv4SPDWyvWtMBZB8XQOGI4x4QgDbQ=,iv:pFiHLQvv+Rz/VtKuN+6A3Xoa8NpCFXr099OgWyiFjoo=,tag:DWUhavmMWL9Zfm/kBPHpHg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.12.2
