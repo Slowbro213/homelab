@@ -7,9 +7,9 @@ spec:
   type: LoadBalancer
   loadBalancerClass: tailscale
   ports:
-    - name: console
+    - name: http
       port: 80
-      targetPort: http-console
+      targetPort: http
   selector:
     app: minio
-    release: minio
+

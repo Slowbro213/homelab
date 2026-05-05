@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: longhorn-tailscale
+  name: argocd-tailscale
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/Slowbro213/homelab.git
     targetRevision: main
-    path: apps/longhorn-tailscale
+    path: apps/tailscale/argocd
   destination:
     server: https://kubernetes.default.svc
-    namespace: longhorn-system
+    namespace: argocd
   syncPolicy:
     automated:
       enabled: true

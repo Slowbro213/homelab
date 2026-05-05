@@ -3,14 +3,12 @@ kind: Application
 metadata:
   name: minio-tailscale
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "-4"
 spec:
   project: default
   source:
     repoURL: https://github.com/Slowbro213/homelab.git
     targetRevision: main
-    path: apps/minio-tailscale
+    path: apps/tailscale/minio
   destination:
     server: https://kubernetes.default.svc
     namespace: minio
