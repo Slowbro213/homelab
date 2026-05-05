@@ -25,6 +25,22 @@ spec:
 
         loki:
           auth_enabled: false
+          podSecurityContext:
+            fsGroup: 10001
+            fsGroupChangePolicy: OnRootMismatch
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
           commonConfig:
             replication_factor: 1
           storage:
@@ -88,9 +104,24 @@ spec:
 
         gateway:
           enabled: true
+          podSecurityContext:
+            fsGroup: 101
+            runAsGroup: 101
+            runAsNonRoot: true
+            runAsUser: 101
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
 
         lokiCanary:
-          enabled: true
+          enabled: false
 
         backend:
           replicas: 0

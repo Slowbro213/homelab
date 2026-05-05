@@ -24,9 +24,16 @@ spec:
               set -eu
 
               echo "Installing ksops and kustomize..."
-              mv ksops /custom-tools/ksops
-              mv kustomize /custom-tools/kustomize
-              chmod +x /custom-tools/ksops /custom-tools/kustomize
+              install -m 0755 ksops /custom-tools/ksops
+              install -m 0755 kustomize /custom-tools/kustomize
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - name: custom-tools
               mountPath: /custom-tools

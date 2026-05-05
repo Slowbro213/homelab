@@ -20,7 +20,66 @@ spec:
       releaseName: kyverno-policies
       values: |
         podSecurityStandard: restricted
-        validationFailureAction: Audit
+        validationFailureAction: Enforce
+        validationAllowExistingViolations: false
+        validationFailureActionOverrides:
+          all:
+            - action: Audit
+              namespaces:
+                - kube-system
+                - longhorn-system
+                - tailscale
+        policyExclude:
+          disallow-capabilities-strict:
+            any:
+              - resources:
+                  kinds:
+                    - Job
+                    - Pod
+                  namespaces:
+                    - minio
+                  names:
+                    - minio-post-job*
+          disallow-privilege-escalation:
+            any:
+              - resources:
+                  kinds:
+                    - Job
+                    - Pod
+                  namespaces:
+                    - minio
+                  names:
+                    - minio-post-job*
+          disallow-host-namespaces:
+            any:
+              - resources:
+                  kinds:
+                    - DaemonSet
+                    - Pod
+                  namespaces:
+                    - monitoring
+                  names:
+                    - monitoring-prometheus-node-exporter*
+          disallow-host-path:
+            any:
+              - resources:
+                  kinds:
+                    - DaemonSet
+                    - Pod
+                  namespaces:
+                    - monitoring
+                  names:
+                    - monitoring-prometheus-node-exporter*
+          restrict-volume-types:
+            any:
+              - resources:
+                  kinds:
+                    - DaemonSet
+                    - Pod
+                  namespaces:
+                    - monitoring
+                  names:
+                    - monitoring-prometheus-node-exporter*
         background: true
 
   syncPolicy:
