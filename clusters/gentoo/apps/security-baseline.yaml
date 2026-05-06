@@ -1,19 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: vault-tailscale
+  name: security-baseline
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-30"
 spec:
-  project: infra
+  project: security
   source:
     repoURL: https://github.com/Slowbro213/homelab.git
     targetRevision: main
-    path: apps/tailscale/vault
+    path: apps/security-baseline
   destination:
     server: https://kubernetes.default.svc
-    namespace: vault
+    namespace: argocd
   syncPolicy:
     automated:
       enabled: true
       prune: true
       selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

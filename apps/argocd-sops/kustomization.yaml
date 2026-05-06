@@ -3,4 +3,5 @@ kind: Kustomization
 
 resources:
   - argocd-cm-patch.yaml
+  - argocd-rbac-cm-patch.yaml
   - repo-server-patch.yaml

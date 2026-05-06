@@ -4,7 +4,7 @@ metadata:
   name: grafana-tailscale
   namespace: argocd
 spec:
-  project: default
+  project: infra
   source:
     repoURL: https://github.com/Slowbro213/homelab.git
     targetRevision: main

@@ -13,7 +13,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  project: default
+  project: infra
   sources:
     - chart: longhorn
       repoURL: https://charts.longhorn.io/
