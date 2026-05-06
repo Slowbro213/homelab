@@ -83,6 +83,10 @@ spec:
             purge: false
             versioning: false
 
+        customCommands:
+          - command: "encrypt set sse-s3 myminio/loki"
+          - command: "encrypt set sse-s3 myminio/zot"
+
         policies:
           - name: loki
             statements:
