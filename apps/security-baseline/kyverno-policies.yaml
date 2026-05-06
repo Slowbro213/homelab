@@ -3,16 +3,20 @@ kind: ClusterPolicy
 metadata:
   name: disallow-latest-image-tag
 spec:
+  admission: true
   validationFailureAction: Enforce
   background: true
+  emitWarning: false
   rules:
     - name: containers
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
               kinds:
                 - Pod
       validate:
+        allowExistingViolations: true
         message: Images must not use the mutable latest tag.
         foreach:
           - list: request.object.spec.containers
@@ -35,10 +39,13 @@ kind: ClusterPolicy
 metadata:
   name: restrict-loadbalancer-services
 spec:
+  admission: true
   validationFailureAction: Enforce
   background: true
+  emitWarning: false
   rules:
     - name: require-explicit-loadbalancer-approval
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -61,18 +68,66 @@ spec:
             operator: NotEquals
             value: "true"
       validate:
+        allowExistingViolations: true
         message: Public LoadBalancer Services require the homelab.slowking.dev/allow-public-load-balancer=true label; Tailscale LoadBalancers are allowed.
         deny: {}
 ---
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
+  name: mutate-minio-post-job-security-context
+spec:
+  admission: true
+  background: false
+  emitWarning: false
+  rules:
+    - name: restrict-minio-post-job-containers
+      skipBackgroundRequests: true
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - minio
+              selector:
+                matchLabels:
+                  app: minio-job
+      mutate:
+        foreach:
+          - list: request.object.spec.containers
+            patchStrategicMerge:
+              spec:
+                containers:
+                  - (name): "{{ element.name }}"
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+          - list: request.object.spec.initContainers || `[]`
+            patchStrategicMerge:
+              spec:
+                initContainers:
+                  - (name): "{{ element.name }}"
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
   name: audit-image-digest-pinning
 spec:
+  admission: true
   validationFailureAction: Audit
   background: true
+  emitWarning: false
   rules:
     - name: critical-workloads-should-pin-digests
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -84,6 +139,7 @@ spec:
                 - minio
                 - registry
       validate:
+        allowExistingViolations: true
         message: Critical workloads should pin images by digest.
         foreach:
           - list: request.object.spec.containers
@@ -106,16 +162,20 @@ kind: ClusterPolicy
 metadata:
   name: audit-container-resources
 spec:
+  admission: true
   validationFailureAction: Audit
   background: true
+  emitWarning: false
   rules:
     - name: require-requests-and-memory-limits
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
               kinds:
                 - Pod
       validate:
+        allowExistingViolations: true
         message: Containers should set cpu and memory requests and a memory limit.
         foreach:
           - list: request.object.spec.containers
