@@ -62,6 +62,8 @@ spec:
       namespace: logging
     - server: https://kubernetes.default.svc
       namespace: monitoring
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
@@ -115,8 +117,16 @@ spec:
       kind: Namespace
     - group: kyverno.io
       kind: ClusterPolicy
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
   namespaceResourceWhitelist:
     - group: ""
       kind: ServiceAccount
     - group: networking.k8s.io
       kind: NetworkPolicy
+    - group: secrets.hashicorp.com
+      kind: VaultAuth
+    - group: secrets.hashicorp.com
+      kind: VaultConnection
+    - group: secrets.hashicorp.com
+      kind: VaultStaticSecret
