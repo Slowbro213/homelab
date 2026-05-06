@@ -4,7 +4,7 @@ metadata:
   name: gentoo-root
   namespace: argocd
 spec:
-  project: default
+  project: gentoo-root
 
   source:
     repoURL: https://github.com/Slowbro213/homelab.git

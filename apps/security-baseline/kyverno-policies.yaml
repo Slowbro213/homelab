@@ -1,0 +1,133 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-image-tag
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: containers
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: Images must not use the mutable latest tag.
+        foreach:
+          - list: request.object.spec.containers
+            deny:
+              conditions:
+                all:
+                  - key: "{{ contains(element.image, ':latest') }}"
+                    operator: Equals
+                    value: true
+          - list: request.object.spec.initContainers || `[]`
+            deny:
+              conditions:
+                all:
+                  - key: "{{ contains(element.image, ':latest') }}"
+                    operator: Equals
+                    value: true
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-loadbalancer-services
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-explicit-loadbalancer-approval
+      match:
+        any:
+          - resources:
+              kinds:
+                - Service
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+      preconditions:
+        all:
+          - key: "{{ request.object.spec.type || '' }}"
+            operator: Equals
+            value: LoadBalancer
+          - key: "{{ request.object.spec.loadBalancerClass || '' }}"
+            operator: NotEquals
+            value: tailscale
+          - key: "{{ request.object.metadata.labels.\"homelab.slowking.dev/allow-public-load-balancer\" || 'false' }}"
+            operator: NotEquals
+            value: "true"
+      validate:
+        message: Public LoadBalancer Services require the homelab.slowking.dev/allow-public-load-balancer=true label; Tailscale LoadBalancers are allowed.
+        deny: {}
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: audit-image-digest-pinning
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: critical-workloads-should-pin-digests
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                - argocd
+                - vault
+                - minio
+                - registry
+      validate:
+        message: Critical workloads should pin images by digest.
+        foreach:
+          - list: request.object.spec.containers
+            deny:
+              conditions:
+                all:
+                  - key: "{{ contains(element.image, '@sha256:') }}"
+                    operator: Equals
+                    value: false
+          - list: request.object.spec.initContainers || `[]`
+            deny:
+              conditions:
+                all:
+                  - key: "{{ contains(element.image, '@sha256:') }}"
+                    operator: Equals
+                    value: false
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: audit-container-resources
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-requests-and-memory-limits
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: Containers should set cpu and memory requests and a memory limit.
+        foreach:
+          - list: request.object.spec.containers
+            deny:
+              conditions:
+                any:
+                  - key: "{{ element.resources.requests.cpu || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.requests.memory || '' }}"
+                    operator: Equals
+                    value: ""
+                  - key: "{{ element.resources.limits.memory || '' }}"
+                    operator: Equals
+                    value: ""
