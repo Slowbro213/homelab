@@ -164,7 +164,7 @@ metadata:
 spec:
   admission: true
   validationFailureAction: Audit
-  background: true
+  background: false
   emitWarning: false
   rules:
     - name: require-requests-and-memory-limits
@@ -179,15 +179,18 @@ spec:
         message: Containers should set cpu and memory requests and a memory limit.
         foreach:
           - list: request.object.spec.containers
-            deny:
-              conditions:
-                any:
-                  - key: "{{ element.resources.requests.cpu || '' }}"
-                    operator: Equals
-                    value: ""
-                  - key: "{{ element.resources.requests.memory || '' }}"
-                    operator: Equals
-                    value: ""
-                  - key: "{{ element.resources.limits.memory || '' }}"
-                    operator: Equals
-                    value: ""
+            pattern:
+              resources:
+                requests:
+                  cpu: "?*"
+                  memory: "?*"
+                limits:
+                  memory: "?*"
+          - list: request.object.spec.initContainers || `[]`
+            pattern:
+              resources:
+                requests:
+                  cpu: "?*"
+                  memory: "?*"
+                limits:
+                  memory: "?*"
