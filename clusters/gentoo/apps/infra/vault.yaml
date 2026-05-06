@@ -15,7 +15,38 @@ spec:
     helm:
       releaseName: vault
       valuesObject:
+        injector:
+          securityContext:
+            pod:
+              runAsNonRoot: true
+              runAsGroup: 1000
+              runAsUser: 100
+              fsGroup: 1000
+              seccompProfile:
+                type: RuntimeDefault
+            container:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              seccompProfile:
+                type: RuntimeDefault
+
         server:
+          statefulSet:
+            securityContext:
+              pod:
+                runAsNonRoot: true
+                runAsGroup: 1000
+                runAsUser: 100
+                fsGroup: 1000
+                seccompProfile:
+                  type: RuntimeDefault
+              container:
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+
           ha:
             enabled: true
             replicas: 3
