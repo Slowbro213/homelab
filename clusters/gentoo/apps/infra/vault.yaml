@@ -33,6 +33,8 @@ spec:
                 type: RuntimeDefault
 
         server:
+          affinity: ""
+
           statefulSet:
             securityContext:
               pod:
