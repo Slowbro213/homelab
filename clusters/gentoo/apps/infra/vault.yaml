@@ -39,6 +39,9 @@ spec:
               seccompProfile:
                 type: RuntimeDefault
 
+        server:
+          affinity: ""
+
           statefulSet:
             securityContext:
               pod:
