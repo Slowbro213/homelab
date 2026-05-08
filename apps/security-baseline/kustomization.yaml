@@ -1,6 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 resources:
   - namespaces.yaml
-  - network-policies.yaml
   - kyverno-policies.yaml
+  - network-policies/apps.yaml
+  - network-policies/logging.yaml
+  - network-policies/minio.yaml
+  - network-policies/monitoring.yaml
+  - network-policies/registry.yaml
+  - network-policies/vault.yaml
+  - network-policies/vault-secrets-operator.yaml
