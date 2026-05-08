@@ -1,0 +1,94 @@
+# ============================================================
+# Namespace: minio
+# ============================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: minio
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-s3-api-ingress
+  namespace: minio
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  policyTypes:
+    - Ingress
+  ingress:
+    # S3 API from logging and registry namespaces
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: logging
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: registry
+      ports:
+        - protocol: TCP
+          port: 9000
+
+    # MinIO console via Tailscale only
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+      ports:
+        - protocol: TCP
+          port: 9001
+
+    # MinIO peer traffic (remove if single-pod deployment)
+    - from:
+        - podSelector:
+            matchLabels:
+              app: minio
+      ports:
+        - protocol: TCP
+          port: 9000
+        - protocol: TCP
+          port: 9001
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-minio-egress
+  namespace: minio
+spec:
+  podSelector:
+    matchLabels:
+      app: minio
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # MinIO peer traffic (remove if single-pod deployment)
+    - to:
+        - podSelector:
+            matchLabels:
+              app: minio
+      ports:
+        - protocol: TCP
+          port: 9000
+        - protocol: TCP
+          port: 9001
