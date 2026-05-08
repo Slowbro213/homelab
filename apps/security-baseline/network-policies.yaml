@@ -45,8 +45,6 @@ spec:
     - Ingress
   ingress:
     - from:
-        - podSelector: {}
-    - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: kube-system
@@ -78,6 +76,7 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # DNS
     - to:
         - namespaceSelector:
             matchLabels:
@@ -90,12 +89,16 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+
+    # Kubernetes API service
     - to:
         - ipBlock:
             cidr: 10.43.0.1/32
       ports:
         - protocol: TCP
           port: 443
+
+    # Object storage
     - to:
         - namespaceSelector:
             matchLabels:
@@ -106,21 +109,17 @@ spec:
       ports:
         - protocol: TCP
           port: 9000
-    - to:
-        - podSelector: {}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-logging-internal
+  name: allow-monitoring-to-logging
   namespace: logging
 spec:
   podSelector: {}
   policyTypes:
     - Ingress
   ingress:
-    - from:
-        - podSelector: {}
     - from:
         - namespaceSelector:
             matchLabels:
@@ -154,6 +153,7 @@ spec:
   policyTypes:
     - Ingress
   ingress:
+    # S3 API clients
     - from:
         - namespaceSelector:
             matchLabels:
@@ -164,6 +164,8 @@ spec:
       ports:
         - protocol: TCP
           port: 9000
+
+    # MinIO console via Tailscale only
     - from:
         - namespaceSelector:
             matchLabels:
@@ -171,8 +173,13 @@ spec:
       ports:
         - protocol: TCP
           port: 9001
+
+    # MinIO peer traffic; keep this if MinIO is distributed or stateful.
+    # If this is a single MinIO pod, remove this block.
     - from:
-        - podSelector: {}
+        - podSelector:
+            matchLabels:
+              app: minio
       ports:
         - protocol: TCP
           port: 9000
@@ -185,10 +192,13 @@ metadata:
   name: allow-minio-required-egress
   namespace: minio
 spec:
-  podSelector: {}
+  podSelector:
+    matchLabels:
+      app: minio
   policyTypes:
     - Egress
   egress:
+    # DNS
     - to:
         - namespaceSelector:
             matchLabels:
@@ -201,8 +211,13 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+
+    # MinIO peer traffic; keep if distributed/stateful.
+    # If this is a single MinIO pod, remove this block.
     - to:
-        - podSelector: {}
+        - podSelector:
+            matchLabels:
+              app: minio
       ports:
         - protocol: TCP
           port: 9000
@@ -231,8 +246,7 @@ spec:
     - Ingress
     - Egress
   ingress:
-    - from:
-        - podSelector: {}
+    # Registry exposed through Traefik only
     - from:
         - namespaceSelector:
             matchLabels:
@@ -244,6 +258,7 @@ spec:
         - protocol: TCP
           port: 5000
   egress:
+    # DNS
     - to:
         - namespaceSelector:
             matchLabels:
@@ -256,6 +271,8 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+
+    # Registry storage backend
     - to:
         - namespaceSelector:
             matchLabels:
@@ -281,7 +298,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-vault-required-traffic
+  name: allow-vault-required-ingress
   namespace: vault
 spec:
   podSelector:
@@ -290,8 +307,8 @@ spec:
       component: server
   policyTypes:
     - Ingress
-    - Egress
   ingress:
+    # Vault API from Vault namespace, VSO, and Tailscale
     - from:
         - namespaceSelector:
             matchLabels:
@@ -305,10 +322,69 @@ spec:
       ports:
         - protocol: TCP
           port: 8200
+
+    # Vault HA / Raft peer traffic only from Vault server pods
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: vault
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault
+              component: server
+      ports:
         - protocol: TCP
           port: 8201
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-vault-required-egress
+  namespace: vault
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+      component: server
+  policyTypes:
+    - Egress
   egress:
-    - {}
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Kubernetes API, likely needed by Vault Kubernetes auth / service discovery
+    - to:
+        - ipBlock:
+            cidr: 10.43.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # Vault HA / Raft peer traffic
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: vault
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vault
+              component: server
+      ports:
+        - protocol: TCP
+          port: 8200
+        - protocol: TCP
+          port: 8201
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -331,6 +407,7 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # DNS
     - to:
         - namespaceSelector:
             matchLabels:
@@ -343,12 +420,16 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+
+    # Kubernetes API
     - to:
         - ipBlock:
             cidr: 10.43.0.1/32
       ports:
         - protocol: TCP
           port: 443
+
+    # Vault API
     - to:
         - namespaceSelector:
             matchLabels:
@@ -364,12 +445,13 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny-ingress
+  name: default-deny
   namespace: monitoring
 spec:
   podSelector: {}
   policyTypes:
     - Ingress
+    - Egress
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -381,8 +463,7 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    - from:
-        - podSelector: {}
+    # Grafana / Alertmanager from Traefik and Tailscale only
     - from:
         - namespaceSelector:
             matchLabels:
@@ -398,3 +479,46 @@ spec:
           port: 3000
         - protocol: TCP
           port: 9093
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-required-egress
+  namespace: monitoring
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Kubernetes API, often needed by Prometheus service discovery
+    - to:
+        - ipBlock:
+            cidr: 10.43.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # Scrape logging namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: logging
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 8080
