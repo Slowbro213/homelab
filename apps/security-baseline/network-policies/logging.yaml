@@ -23,6 +23,7 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # DNS
     - to:
         - namespaceSelector:
             matchLabels:
@@ -36,6 +37,7 @@ spec:
         - protocol: TCP
           port: 53
 
+    # Kubernetes API
     - to:
         - ipBlock:
             cidr: 10.43.0.1/32
@@ -43,6 +45,7 @@ spec:
         - protocol: TCP
           port: 443
 
+    # Loki object storage
     - to:
         - namespaceSelector:
             matchLabels:
@@ -53,6 +56,16 @@ spec:
       ports:
         - protocol: TCP
           port: 9000
+
+    # ✅ FIX: Alloy (in this namespace) → Loki gateway (also in this namespace)
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: loki
+              app.kubernetes.io/component: gateway
+      ports:
+        - protocol: TCP
+          port: 8080
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -87,99 +100,7 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: alloy
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: alloy
-      ports:
-        - protocol: TCP
-          port: 8080
-
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: monitoring
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: grafana
-      ports:
-        - protocol: TCP
-          port: 8080
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: default-deny
-  namespace: alloy
-spec:
-  podSelector: {}
-  policyTypes:
-    - Ingress
-    - Egress
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-alloy-egress
-  namespace: alloy
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: alloy
-  policyTypes:
-    - Egress
-  egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-          podSelector:
-            matchLabels:
-              k8s-app: kube-dns
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-
-    # Push logs to Loki gateway
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: logging
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: loki
-              app.kubernetes.io/component: gateway
-      ports:
-        - protocol: TCP
-          port: 8080
-
-    # Kubernetes API for service discovery
-    - to:
-        - ipBlock:
-            cidr: 10.43.0.1/32
-      ports:
-        - protocol: TCP
-          port: 443
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-loki-gateway-ingress
-  namespace: logging
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: loki
-      app.kubernetes.io/component: gateway
-  policyTypes:
-    - Ingress
-  ingress:
-    # Alloy pushes logs to the gateway
+    # ✅ FIX: Alloy is in the same namespace, bare podSelector is correct
     - from:
         - podSelector:
             matchLabels:
@@ -188,7 +109,7 @@ spec:
         - protocol: TCP
           port: 8080
 
-    # Grafana queries Loki via the gateway
+    # Grafana queries Loki from monitoring namespace
     - from:
         - namespaceSelector:
             matchLabels:
@@ -199,6 +120,7 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
