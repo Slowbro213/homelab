@@ -1,0 +1,13 @@
+buckets:
+  - name: loki
+    policy: none
+    purge: false
+    versioning: false
+  - name: zot
+    policy: none
+    purge: false
+    versioning: false
+  - name: postgres-backups
+    policy: none
+    purge: false
+    versioning: false

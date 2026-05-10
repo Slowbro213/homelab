@@ -1,0 +1,72 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minio
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  project: infra
+  source:
+    repoURL: https://charts.min.io/
+    chart: minio
+    targetRevision: 5.4.0
+    helm:
+      releaseName: minio
+      valuesObject:
+        mode: standalone
+        replicas: 1
+        existingSecret: minio-root-credentials
+        extraSecret: minio-root-credentials
+        environment:
+          MINIO_SSE_AUTO_ENCRYPTION: "on"
+        persistence:
+          enabled: true
+          storageClass: longhorn-rwo
+          size: 50Gi
+        securityContext:
+          enabled: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: false
+          seccompProfile:
+            type: RuntimeDefault
+        postJob:
+          securityContext:
+            enabled: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 2Gi
+        service:
+          type: ClusterIP
+          port: 9000
+        consoleService:
+          type: ClusterIP
+          port: 9001
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: minio
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

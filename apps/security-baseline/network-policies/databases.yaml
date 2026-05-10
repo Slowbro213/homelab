@@ -1,0 +1,106 @@
+# ============================================================
+# Namespace: databases
+# ============================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: databases
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-databases-egress
+  namespace: databases
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Kubernetes API
+    - to:
+        - ipBlock:
+            cidr: 10.43.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # CNPG backups to MinIO
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: minio
+          podSelector:
+            matchLabels:
+              app: minio
+      ports:
+        - protocol: TCP
+          port: 9000
+
+    # CNPG raft/replication between postgres pods
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-ha
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-ingress
+  namespace: databases
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: postgres-ha
+  policyTypes:
+    - Ingress
+  ingress:
+    # Apps connecting to postgres
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: apps
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # CNPG replication between pods
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-ha
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Prometheus scraping
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9187

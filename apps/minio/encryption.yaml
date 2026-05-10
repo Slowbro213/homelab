@@ -1,0 +1,4 @@
+customCommands:
+  - command: "encrypt set sse-s3 myminio/loki"
+  - command: "encrypt set sse-s3 myminio/zot"
+  - command: "encrypt set sse-s3 myminio/postgres-backups"
