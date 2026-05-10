@@ -8,9 +8,32 @@ metadata:
 spec:
   project: infra
   source:
-    repoURL: https://github.com/Slowbro213/homelab.git
-    targetRevision: HEAD
-    path: apps/minio
+    repoURL: https://charts.min.io/
+    chart: minio
+    targetRevision: 5.4.0
+    helm:
+      releaseName: minio
+      valueFiles:
+        - $values/apps/minio/values.yaml
+        - $values/apps/minio/buckets.yaml
+        - $values/apps/minio/policies.yaml
+        - $values/apps/minio/users.yaml
+        - $values/apps/minio/encryption.yaml
+  sources:
+    - repoURL: https://charts.min.io/
+      chart: minio
+      targetRevision: 5.4.0
+      helm:
+        releaseName: minio
+        valueFiles:
+          - $values/apps/minio/values.yaml
+          - $values/apps/minio/buckets.yaml
+          - $values/apps/minio/policies.yaml
+          - $values/apps/minio/users.yaml
+          - $values/apps/minio/encryption.yaml
+    - repoURL: https://github.com/Slowbro213/homelab.git
+      targetRevision: HEAD
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: minio
