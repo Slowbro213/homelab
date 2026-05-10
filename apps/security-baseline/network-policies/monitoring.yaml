@@ -81,6 +81,15 @@ spec:
           port: 80
         - protocol: TCP
           port: 8080
+
+    # Prometheus scrapes databases namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: databases
+      ports:
+        - protocol: TCP
+          port: 9187
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

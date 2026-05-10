@@ -1,0 +1,58 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-ha
+  namespace: databases
+spec:
+  instances: 3
+
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "1024MB"
+      effective_cache_size: "3072MB"
+      work_mem: "16MB"
+      maintenance_work_mem: "256MB"
+      wal_level: "replica"
+      max_wal_senders: "10"
+      max_replication_slots: "10"
+
+  storage:
+    size: 10Gi
+    storageClass: longhorn-rwo
+
+  resources:
+    requests:
+      cpu: "1"
+      memory: 1Gi
+    limits:
+      cpu: "4"
+      memory: 4Gi
+
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://postgres-backups/ha-cluster/
+      endpointURL: http://minio.minio.svc.cluster.local:9000
+      s3Credentials:
+        accessKeyId:
+          name: minio-postgres-credentials
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: minio-postgres-credentials
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+    retentionPolicy: "30d"
+
+  scheduledBackups:
+    - name: every-two-days-backup
+      schedule: "0 0 2 */2 * *"
+      backupOwnerReference: self
+
+  monitoring:
+    enablePodMonitor: true
+
+  affinity:
+    topologyKey: kubernetes.io/hostname

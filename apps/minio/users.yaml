@@ -1,0 +1,13 @@
+users:
+  - accessKey: loki
+    existingSecret: minio-loki-credentials
+    existingSecretKey: secretKey
+    policy: loki
+  - accessKey: zot
+    existingSecret: minio-zot-credentials
+    existingSecretKey: secretKey
+    policy: zot
+  - accessKey: postgres
+    existingSecret: minio-postgres-credentials
+    existingSecretKey: secretKey
+    policy: postgres
