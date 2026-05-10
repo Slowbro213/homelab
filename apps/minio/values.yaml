@@ -45,23 +45,4 @@ service:
 consoleService:
   type: ClusterIP
   port: 9001
-postJob:
-  image:
-    repository: quay.io/minio/mc
-    tag: RELEASE.2024-01-13T08-44-48Z
-    digest: sha256:72ed6376a67143073d6c9c3193bd4a9f66cfe677911dac5657bd91784dfd627b
-  securityContext:
-    enabled: true
-    runAsUser: 1000
-    runAsGroup: 1000
-    runAsNonRoot: true
-    fsGroup: 1000
-    seccompProfile:
-      type: RuntimeDefault
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 256Mi
+
