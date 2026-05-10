@@ -102,7 +102,6 @@ spec:
         - protocol: TCP
           port: 9090
 
-    # ✅ FIX: Grafana must be able to reach Loki gateway in logging namespace
     - to:
         - namespaceSelector:
             matchLabels:
