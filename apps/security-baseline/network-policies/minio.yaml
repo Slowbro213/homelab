@@ -54,6 +54,9 @@ spec:
         - podSelector:
             matchLabels:
               app: minio
+        - podSelector:
+            matchLabels:
+              app: minio-job
       ports:
         - protocol: TCP
           port: 9000
@@ -67,8 +70,12 @@ metadata:
   namespace: minio
 spec:
   podSelector:
-    matchLabels:
-      app: minio
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - minio
+          - minio-job
   policyTypes:
     - Egress
   egress:
@@ -88,8 +95,12 @@ spec:
     # MinIO peer traffic (remove if single-pod deployment)
     - to:
         - podSelector:
-            matchLabels:
-              app: minio
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - minio
+                  - minio-job
       ports:
         - protocol: TCP
           port: 9000
