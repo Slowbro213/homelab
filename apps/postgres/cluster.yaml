@@ -5,7 +5,6 @@ metadata:
   namespace: databases
 spec:
   instances: 3
-
   postgresql:
     parameters:
       max_connections: "200"
@@ -16,11 +15,9 @@ spec:
       wal_level: "replica"
       max_wal_senders: "10"
       max_replication_slots: "10"
-
   storage:
     size: 10Gi
     storageClass: longhorn-rwo
-
   resources:
     requests:
       cpu: "1"
@@ -28,7 +25,6 @@ spec:
     limits:
       cpu: "4"
       memory: 4Gi
-
   backup:
     barmanObjectStore:
       destinationPath: s3://postgres-backups/ha-cluster/
@@ -45,15 +41,7 @@ spec:
       data:
         compression: gzip
     retentionPolicy: "30d"
-
-  scheduledBackups:
-    - name: every-two-days-backup
-      schedule: "0 0 2 */2 * *"
-      backupOwnerReference: self
-
   monitoring:
     enablePodMonitor: true
-
   affinity:
     topologyKey: kubernetes.io/hostname
-

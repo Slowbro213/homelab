@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: every-two-days-backup
+  namespace: databases
+spec:
+  schedule: "0 0 2 */2 * *"
+  backupOwnerReference: self
+  cluster:
+    name: postgres-ha
