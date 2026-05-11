@@ -12,9 +12,6 @@ spec:
       effective_cache_size: "3072MB"
       work_mem: "16MB"
       maintenance_work_mem: "256MB"
-      wal_level: "replica"
-      max_wal_senders: "10"
-      max_replication_slots: "10"
   storage:
     size: 10Gi
     storageClass: longhorn-rwo
