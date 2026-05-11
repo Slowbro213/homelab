@@ -88,6 +88,15 @@ spec:
         - protocol: TCP
           port: 443
 
+    # Kubernetes API backend endpoint(s) used by Service "kubernetes"
+    # Some CNIs enforce policy on post-NAT destination IP/port.
+    - to:
+        - ipBlock:
+            cidr: 192.168.1.0/24
+      ports:
+        - protocol: TCP
+          port: 6443
+
     # Raft peer traffic
     - to:
         - namespaceSelector:
