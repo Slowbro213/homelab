@@ -1,7 +1,7 @@
 mode: standalone
 replicas: 1
 existingSecret: minio-root-credentials
-extraSecret: minio-root-credentials
+extraSecret: minio-kms
 environment:
   MINIO_SSE_AUTO_ENCRYPTION: "on"
 persistence:
@@ -45,4 +45,3 @@ service:
 consoleService:
   type: ClusterIP
   port: 9001
-
