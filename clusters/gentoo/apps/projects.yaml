@@ -42,6 +42,7 @@ spec:
     - https://prometheus-community.github.io/helm-charts
     - https://github.com/Slowbro213/homelab.git
     - https://cloudnative-pg.github.io/charts
+    - https://charts.bitnami.com/bitnami
   destinations:
     - server: https://kubernetes.default.svc
       namespace: argocd
@@ -69,6 +70,8 @@ spec:
       namespace: databases 
     - server: https://kubernetes.default.svc
       namespace: kube-system
+    - server: https://kubernetes.default.svc
+      namespace: redis
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

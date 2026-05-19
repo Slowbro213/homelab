@@ -9,5 +9,6 @@ resources:
   - network-policies/minio.yaml
   - network-policies/monitoring.yaml
   - network-policies/registry.yaml
+  - network-policies/redis.yaml
   - network-policies/vault.yaml
   - network-policies/vault-secrets-operator.yaml

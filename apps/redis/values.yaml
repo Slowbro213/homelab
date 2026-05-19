@@ -1,0 +1,30 @@
+architecture: standalone
+
+auth:
+  enabled: true
+  existingSecret: redis-auth
+  existingSecretPasswordKey: password
+
+master:
+  persistence:
+    enabled: true
+    storageClass: longhorn-rwo
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 25m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+replica:
+  replicaCount: 0
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 30s
+    labels:
+      release: monitoring
