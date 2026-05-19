@@ -3,7 +3,7 @@ architecture: standalone
 image:
   registry: docker.io
   repository: bitnami/redis
-  tag: 8.2.1-debian-12
+  tag: 8.6.3
 
 auth:
   enabled: true
@@ -30,7 +30,7 @@ metrics:
   image:
     registry: docker.io
     repository: bitnami/redis-exporter
-    tag: 1.76.0-debian-12
+    tag: 1.83.0
   serviceMonitor:
     enabled: true
     namespace: monitoring
