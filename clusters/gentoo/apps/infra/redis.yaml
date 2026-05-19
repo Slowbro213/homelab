@@ -7,18 +7,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "-4"
 spec:
   project: infra
-  source:
-    repoURL: https://charts.bitnami.com/bitnami
-    chart: redis
-    targetRevision: 23.1.1
-    helm:
-      releaseName: redis
-      valueFiles:
-        - $values/apps/redis/values.yaml
   sources:
     - repoURL: https://charts.bitnami.com/bitnami
       chart: redis
-      targetRevision: 23.1.1
+      targetRevision: 25.5.3
       helm:
         releaseName: redis
         valueFiles:
