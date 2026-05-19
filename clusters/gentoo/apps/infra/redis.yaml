@@ -7,17 +7,10 @@ metadata:
     argocd.argoproj.io/sync-wave: "-4"
 spec:
   project: infra
-  sources:
-    - repoURL: https://charts.bitnami.com/bitnami
-      chart: redis
-      targetRevision: 25.5.3
-      helm:
-        releaseName: redis
-        valueFiles:
-          - $values/apps/redis/values.yaml
-    - repoURL: https://github.com/Slowbro213/homelab.git
-      targetRevision: HEAD
-      ref: values
+  source:
+    repoURL: https://github.com/Slowbro213/homelab.git
+    targetRevision: HEAD
+    path: apps/redis/manifests
   destination:
     server: https://kubernetes.default.svc
     namespace: redis
