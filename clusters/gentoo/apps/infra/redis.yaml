@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://charts.bitnami.com/bitnami
     chart: redis
-    targetRevision: 20.11.3
+    targetRevision: 23.1.1
     helm:
       releaseName: redis
       valueFiles:
@@ -18,7 +18,7 @@ spec:
   sources:
     - repoURL: https://charts.bitnami.com/bitnami
       chart: redis
-      targetRevision: 20.11.3
+      targetRevision: 23.1.1
       helm:
         releaseName: redis
         valueFiles:
