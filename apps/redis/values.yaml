@@ -2,8 +2,10 @@ architecture: standalone
 
 image:
   registry: docker.io
-  repository: bitnami/redis
-  tag: 8.6.3
+  repository: bitnamisecure/redis
+  tag: ""
+  digest: sha256:1347d526ecec0c6537e99eac09e7c3405c21664f6044ff60e78b0898da37abd2
+  pullPolicy: IfNotPresent
 
 auth:
   enabled: true
@@ -29,8 +31,10 @@ metrics:
   enabled: true
   image:
     registry: docker.io
-    repository: bitnami/redis-exporter
-    tag: 1.83.0
+    repository: bitnamisecure/redis-exporter
+    tag: ""
+    digest: sha256:839260c04bc3858980157da2f69219681bdcd8874fdb0a58c40b396050b5100d
+    pullPolicy: IfNotPresent
   serviceMonitor:
     enabled: true
     namespace: monitoring
