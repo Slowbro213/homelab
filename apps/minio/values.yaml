@@ -2,12 +2,13 @@ mode: standalone
 replicas: 1
 existingSecret: minio-root-credentials
 extraSecret: minio-kms
+# WARNING: Rotating MINIO_KMS_SECRET_KEY without migration will make old ciphertext undecryptable.
 environment:
   MINIO_SSE_AUTO_ENCRYPTION: "on"
 persistence:
   enabled: true
   storageClass: longhorn-rwo
-  size: 50Gi
+  size: 10Gi
 securityContext:
   enabled: true
   runAsUser: 1000
