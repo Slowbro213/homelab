@@ -82,7 +82,31 @@ spec:
 
         alertmanager:
           enabled: true
+          config:
+            global:
+              resolve_timeout: 5m
+            route:
+              group_by:
+                - alertname
+                - namespace
+                - severity
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 4h
+              receiver: "null"
+              routes:
+                - matchers:
+                    - severity=~"warning|critical"
+                  receiver: discord
+            receivers:
+              - name: "null"
+              - name: discord
+                webhook_configs:
+                  - url_file: /etc/alertmanager/secrets/alertmanager-discord-webhook/webhook_url
+                    send_resolved: true
           alertmanagerSpec:
+            secrets:
+              - alertmanager-discord-webhook
             storage:
               volumeClaimTemplate:
                 spec:

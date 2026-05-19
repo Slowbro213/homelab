@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: alertmanager-discord-pipeline-test
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: alertmanager-discord-pipeline-test
+      rules:
+        - alert: AlertmanagerDiscordPipelineTest
+          expr: vector(1)
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Alertmanager Discord pipeline test"
+            description: "Synthetic alert to validate Discord notifications end-to-end."
