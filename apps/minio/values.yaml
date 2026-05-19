@@ -8,7 +8,7 @@ environment:
 persistence:
   enabled: true
   storageClass: longhorn-rwo
-  size: 10Gi
+  size: 50Gi
 securityContext:
   enabled: true
   runAsUser: 1000
