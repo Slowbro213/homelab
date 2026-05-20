@@ -101,21 +101,34 @@ spec:
             receivers:
               - name: "null"
               - name: discord
-                webhook_configs:
-                  - url_file: /etc/alertmanager/secrets/alertmanager-discord-webhook/webhook_url
+                discord_configs:
+                  - webhook_url_file: /etc/alertmanager/secrets/alertmanager-discord-webhook/webhook_url
                     send_resolved: true
-          alertmanagerSpec:
-            secrets:
-              - alertmanager-discord-webhook
-            storage:
-              volumeClaimTemplate:
-                spec:
-                  storageClassName: longhorn-rwo
-                  accessModes:
-                    - ReadWriteOnce
-                  resources:
-                    requests:
-                      storage: 1Gi
+                    content: >-
+                      {{ if eq .Status "firing" }}🚨 FIRING{{ else }}✅ RESOLVED{{ end }}
+                      {{ range .Alerts }}
+                      **{{ .Labels.alertname }}**
+                      Severity: `{{ .Labels.severity }}`
+                      Namespace: `{{ .Labels.namespace }}`
+                      {{ if .Annotations.summary }}
+                      Summary: {{ .Annotations.summary }}
+                      {{ end }}
+                      {{ if .Annotations.description }}
+                      Description: {{ .Annotations.description }}
+                      {{ end }}
+                      {{ end }}
+                        alertmanagerSpec:
+                          secrets:
+                            - alertmanager-discord-webhook
+                          storage:
+                            volumeClaimTemplate:
+                              spec:
+                                storageClassName: longhorn-rwo
+                                accessModes:
+                                  - ReadWriteOnce
+                                resources:
+                                  requests:
+                                    storage: 1Gi
 
   destination:
     server: https://kubernetes.default.svc
