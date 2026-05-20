@@ -82,6 +82,7 @@ spec:
 
         alertmanager:
           enabled: true
+
           config:
             global:
               resolve_timeout: 5m
@@ -94,41 +95,26 @@ spec:
               group_interval: 5m
               repeat_interval: 4h
               receiver: "null"
-              routes:
-                - matchers:
-                    - severity=~"warning|critical"
-                  receiver: discord
             receivers:
               - name: "null"
-              - name: discord
-                discord_configs:
-                  - webhook_file: /etc/alertmanager/secrets/alertmanager-discord-webhook/webhook_url
-                    send_resolved: true
-                    content: >-
-                      {{ if eq .Status "firing" }}🚨 FIRING{{ else }}✅ RESOLVED{{ end }}
-                      {{ range .Alerts }}
-                      **{{ .Labels.alertname }}**
-                      Severity: `{{ .Labels.severity }}`
-                      Namespace: `{{ .Labels.namespace }}`
-                      {{ if .Annotations.summary }}
-                      Summary: {{ .Annotations.summary }}
-                      {{ end }}
-                      {{ if .Annotations.description }}
-                      Description: {{ .Annotations.description }}
-                      {{ end }}
-                      {{ end }}
-                        alertmanagerSpec:
-                          secrets:
-                            - alertmanager-discord-webhook
-                          storage:
-                            volumeClaimTemplate:
-                              spec:
-                                storageClassName: longhorn-rwo
-                                accessModes:
-                                  - ReadWriteOnce
-                                resources:
-                                  requests:
-                                    storage: 1Gi
+
+          alertmanagerSpec:
+            alertmanagerConfigSelector:
+              matchLabels:
+                alertmanagerConfig: monitoring-kube-prometheus-alertmanager
+
+            alertmanagerConfigMatcherStrategy:
+              type: None
+
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: longhorn-rwo
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 1Gi
 
   destination:
     server: https://kubernetes.default.svc

@@ -1,0 +1,43 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: discord
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: monitoring-kube-prometheus-alertmanager
+spec:
+  route:
+    receiver: discord
+    groupBy:
+      - alertname
+      - namespace
+      - severity
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    matchers:
+      - name: severity
+        matchType: =~
+        value: warning|critical
+
+  receivers:
+    - name: discord
+      discordConfigs:
+        - apiURL:
+            name: alertmanager-discord-webhook
+            key: webhook_url
+          sendResolved: true
+          content: >-
+            {{ if eq .Status "firing" }}🚨 FIRING{{ else }}✅ RESOLVED{{ end }}
+            {{ range .Alerts }}
+
+            **{{ .Labels.alertname }}**
+            Severity: `{{ .Labels.severity }}`
+            Namespace: `{{ .Labels.namespace }}`
+            {{ if .Annotations.summary }}
+            Summary: {{ .Annotations.summary }}
+            {{ end }}
+            {{ if .Annotations.description }}
+            Description: {{ .Annotations.description }}
+            {{ end }}
+            {{ end }}
