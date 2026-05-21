@@ -104,6 +104,16 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
+
+    # CNPG operator status extraction from instance manager
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: cloudnative-pg
+      ports:
         - protocol: TCP
           port: 8000
 
@@ -123,4 +133,3 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
-

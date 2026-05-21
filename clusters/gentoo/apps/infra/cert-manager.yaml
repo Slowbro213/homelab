@@ -17,21 +17,26 @@ spec:
       valuesObject:
         crds:
           enabled: true
-        global:
-          podSecurityContext:
-            seccompProfile:
-              type: RuntimeDefault
         securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
           allowPrivilegeEscalation: false
           capabilities:
             drop: [ALL]
         webhook:
           securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop: [ALL]
         cainjector:
           securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop: [ALL]
