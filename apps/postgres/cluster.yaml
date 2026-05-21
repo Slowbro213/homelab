@@ -5,6 +5,9 @@ metadata:
   namespace: databases
 spec:
   instances: 3
+  certificates:
+    serverTLSSecret: postgres-ha-server-tls
+    serverCASecret: postgres-ha-server-tls
   postgresql:
     parameters:
       max_connections: "200"

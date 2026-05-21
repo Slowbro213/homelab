@@ -47,7 +47,44 @@ spec:
               },
               "http": {
                 "address": "0.0.0.0",
-                "port": "5000"
+                "port": "5000",
+                "externalUrl": "https://registry.gentoo.lan",
+                "auth": {
+                  "failDelay": 5,
+                  "htpasswd": {
+                    "path": "/etc/zot/auth/.htpasswd"
+                  },
+                  "openid": {
+                    "providers": {
+                      "oidc": {
+                        "credentialsFile": "/etc/zot/oidc/oidc-credentials.json",
+                        "name": "Authentik",
+                        "issuer": "https://sso.gentoo.lan/application/o/zot/",
+                        "keypath": "",
+                        "scopes": ["openid", "profile", "email", "groups"]
+                      }
+                    }
+                  }
+                },
+                "accessControl": {
+                  "repositories": {
+                    "**": {
+                      "policies": [
+                        {
+                          "users": ["registry-admin"],
+                          "groups": ["zot-pushers"],
+                          "actions": ["read", "create", "update", "delete"]
+                        }
+                      ],
+                      "defaultPolicy": ["read"]
+                    }
+                  },
+                  "adminPolicy": {
+                    "users": ["registry-admin"],
+                    "groups": ["zot-admins"],
+                    "actions": ["read", "create", "update", "delete"]
+                  }
+                }
               },
               "log": {
                 "level": "debug"
@@ -65,6 +102,12 @@ spec:
               secretKeyRef:
                 name: zot-s3-credentials
                 key: AWS_SECRET_ACCESS_KEY
+
+        externalSecrets:
+          - secretName: zot-auth
+            mountPath: /etc/zot/auth
+          - secretName: zot-oidc-credentials
+            mountPath: /etc/zot/oidc
 
         service:
           type: ClusterIP

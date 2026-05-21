@@ -22,6 +22,18 @@ spec:
           type: daemonset
 
         alloy:
+          extraEnv:
+            - name: LOKI_BASIC_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: loki-basic-auth
+                  key: username
+            - name: LOKI_BASIC_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loki-basic-auth
+                  key: password
+
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -88,6 +100,10 @@ spec:
               loki.write "default" {
                 endpoint {
                   url = "http://loki-gateway.logging.svc.cluster.local/loki/api/v1/push"
+                  basic_auth {
+                    username = sys.env("LOKI_BASIC_AUTH_USERNAME")
+                    password = sys.env("LOKI_BASIC_AUTH_PASSWORD")
+                  }
                 }
               }
 

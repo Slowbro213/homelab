@@ -20,7 +20,19 @@ global:
     - name: AUTHENTIK_POSTGRESQL__NAME
       value: authentik
     - name: AUTHENTIK_POSTGRESQL__SSLMODE
-      value: disable
+      value: verify-full
+    - name: AUTHENTIK_POSTGRESQL__SSLROOTCERT
+      value: /etc/ssl/gentoo/ca.crt
+
+  volumeMounts:
+    - name: gentoo-internal-ca
+      mountPath: /etc/ssl/gentoo
+      readOnly: true
+
+  volumes:
+    - name: gentoo-internal-ca
+      secret:
+        secretName: gentoo-internal-ca-bundle
 
 server:
   replicas: 1

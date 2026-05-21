@@ -31,6 +31,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-100"
 spec:
+  description: Broad infrastructure project. This intentionally allows cluster-scoped and namespace-scoped resources because it owns controllers, CRDs, webhooks, storage, networking, and core services; tighten after rendering and inventorying each chart.
   sourceRepos:
     - https://charts.longhorn.io/
     - https://charts.min.io/

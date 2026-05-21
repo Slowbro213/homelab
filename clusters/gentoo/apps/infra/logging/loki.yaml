@@ -98,6 +98,9 @@ spec:
 
         gateway:
           enabled: true
+          basicAuth:
+            enabled: true
+            existingSecret: loki-basic-auth
           podSecurityContext:
             fsGroup: 101
             runAsGroup: 101
@@ -116,6 +119,20 @@ spec:
 
         lokiCanary:
           enabled: true
+          extraArgs:
+            - -user=$(LOKI_BASIC_AUTH_USERNAME)
+            - -pass=$(LOKI_BASIC_AUTH_PASSWORD)
+          extraEnv:
+            - name: LOKI_BASIC_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: loki-basic-auth
+                  key: username
+            - name: LOKI_BASIC_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loki-basic-auth
+                  key: password
 
         backend:
           replicas: 0

@@ -14,6 +14,16 @@ spec:
       releaseName: monitoring
       valuesObject:
         grafana:
+          envValueFrom:
+            LOKI_BASIC_AUTH_USERNAME:
+              secretKeyRef:
+                name: loki-basic-auth
+                key: username
+            LOKI_BASIC_AUTH_PASSWORD:
+              secretKeyRef:
+                name: loki-basic-auth
+                key: password
+
           admin:
             existingSecret: grafana-secrets
             userKey: admin-user
@@ -41,6 +51,10 @@ spec:
               type: loki
               access: proxy
               url: http://loki-gateway.logging.svc.cluster.local
+              basicAuth: true
+              basicAuthUser: ${LOKI_BASIC_AUTH_USERNAME}
+              secureJsonData:
+                basicAuthPassword: ${LOKI_BASIC_AUTH_PASSWORD}
               isDefault: false
 
         prometheusOperator:
