@@ -17,6 +17,24 @@ spec:
       valuesObject:
         crds:
           enabled: true
+        global:
+          podSecurityContext:
+            seccompProfile:
+              type: RuntimeDefault
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+        webhook:
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+        cainjector:
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
 
   destination:
     server: https://kubernetes.default.svc

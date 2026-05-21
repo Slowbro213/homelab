@@ -8,14 +8,17 @@ metadata:
 spec:
   project: infra
 
-  source:
-    repoURL: https://falcosecurity.github.io/charts
-    chart: falco
-    targetRevision: 8.0.5
-    helm:
-      releaseName: falco
-      valueFiles:
-        - values.yaml
+  sources:
+    - repoURL: https://falcosecurity.github.io/charts
+      chart: falco
+      targetRevision: 8.0.5
+      helm:
+        releaseName: falco
+        valueFiles:
+          - $values/apps/falco/values.yaml
+    - repoURL: https://github.com/Slowbro213/homelab.git
+      targetRevision: HEAD
+      ref: values
 
   destination:
     server: https://kubernetes.default.svc

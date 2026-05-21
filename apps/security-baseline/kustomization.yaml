@@ -13,3 +13,5 @@ resources:
   - network-policies/redis.yaml
   - network-policies/vault.yaml
   - network-policies/vault-secrets-operator.yaml
+  - network-policies/databases.yaml
+  - network-policies/falco.yaml
