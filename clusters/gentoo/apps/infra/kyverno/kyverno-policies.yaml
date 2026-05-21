@@ -29,6 +29,7 @@ spec:
                 - kube-system
                 - longhorn-system
                 - tailscale
+                - falco
         policyExclude:
           disallow-capabilities-strict:
             any:
