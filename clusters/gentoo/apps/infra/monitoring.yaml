@@ -25,10 +25,16 @@ spec:
           ingress:
             enabled: true
             ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: gentoo-internal-ca
             hosts:
               - grafana.gentoo.lan
             path: /
             pathType: Prefix
+            tls:
+              - secretName: grafana-gentoo-lan-tls
+                hosts:
+                  - grafana.gentoo.lan
 
           additionalDataSources:
             - name: Loki

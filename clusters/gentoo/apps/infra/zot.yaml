@@ -73,11 +73,17 @@ spec:
         ingress:
           enabled: true
           className: traefik
+          annotations:
+            cert-manager.io/cluster-issuer: gentoo-internal-ca
           hosts:
             - host: registry.gentoo.lan
               paths:
                 - path: /
                   pathType: Prefix
+          tls:
+            - secretName: registry-gentoo-lan-tls
+              hosts:
+                - registry.gentoo.lan
 
   destination:
     server: https://kubernetes.default.svc

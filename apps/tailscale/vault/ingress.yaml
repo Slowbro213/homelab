@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vault-tailscale
+  namespace: vault
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: vault
+      port:
+        number: 8200
+  tls:
+    - hosts:
+        - vault-vault-tailscale

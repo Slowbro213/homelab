@@ -37,6 +37,7 @@ spec:
     - https://grafana.github.io/helm-charts
     - https://helm.releases.hashicorp.com
     - https://kyverno.github.io/kyverno
+    - https://charts.jetstack.io
     - https://pkgs.tailscale.com/helmcharts
     - http://zotregistry.dev/helm-charts/
     - https://prometheus-community.github.io/helm-charts
@@ -75,6 +76,8 @@ spec:
       namespace: redis
     - server: https://kubernetes.default.svc
       namespace: falco
+    - server: https://kubernetes.default.svc
+      namespace: cert-manager
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

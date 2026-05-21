@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alertmanager-tailscale
+  namespace: monitoring
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: monitoring-kube-prometheus-alertmanager
+      port:
+        number: 9093
+  tls:
+    - hosts:
+        - monitoring-alertmanager-tailscale

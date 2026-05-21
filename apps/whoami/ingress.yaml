@@ -2,8 +2,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: whoami
+  annotations:
+    cert-manager.io/cluster-issuer: gentoo-internal-ca
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - whoami.gentoo.lan
+      secretName: whoami-gentoo-lan-tls
   rules:
     - host: whoami.gentoo.lan
       http:
