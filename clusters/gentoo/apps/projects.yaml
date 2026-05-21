@@ -43,6 +43,7 @@ spec:
     - https://github.com/Slowbro213/homelab.git
     - https://cloudnative-pg.github.io/charts
     - https://charts.bitnami.com/bitnami
+    - https://falcosecurity.github.io/charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: argocd
