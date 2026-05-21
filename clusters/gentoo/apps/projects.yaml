@@ -45,6 +45,7 @@ spec:
     - https://cloudnative-pg.github.io/charts
     - https://charts.bitnami.com/bitnami
     - https://falcosecurity.github.io/charts
+    - https://charts.goauthentik.io
   destinations:
     - server: https://kubernetes.default.svc
       namespace: argocd
