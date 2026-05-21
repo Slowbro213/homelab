@@ -115,7 +115,7 @@ spec:
           port: 9187
     # Authentik
     - from:
-        - podSelector:
+        - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: authentik
       ports:
