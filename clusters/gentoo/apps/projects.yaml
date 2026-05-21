@@ -73,6 +73,8 @@ spec:
       namespace: kube-system
     - server: https://kubernetes.default.svc
       namespace: redis
+    - server: https://kubernetes.default.svc
+      namespace: falco
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
