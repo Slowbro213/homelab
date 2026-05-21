@@ -15,3 +15,4 @@ resources:
   - network-policies/vault-secrets-operator.yaml
   - network-policies/databases.yaml
   - network-policies/falco.yaml
+  - network-policies/authentik.yaml

@@ -1,0 +1,93 @@
+authentik:
+  enabled: true
+  existingSecret:
+    secretName: authentik-config
+
+postgresql:
+  enabled: false
+
+global:
+  env:
+    # General authentik config
+    - name: AUTHENTIK_LOG_LEVEL
+      value: info
+
+    # External PostgreSQL: your existing CNPG RW service
+    - name: AUTHENTIK_POSTGRESQL__HOST
+      value: postgres-ha-rw.databases.svc.cluster.local
+    - name: AUTHENTIK_POSTGRESQL__PORT
+      value: "5432"
+    - name: AUTHENTIK_POSTGRESQL__NAME
+      value: authentik
+
+    # CNPG is currently internal plaintext unless you explicitly enabled TLS.
+    # Authentik defaults to verify-ca, so set this explicitly.
+    - name: AUTHENTIK_POSTGRESQL__SSLMODE
+      value: disable
+
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+server:
+  replicas: 1
+
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+
+    # Add your cert-manager issuer annotation here if your cluster requires it.
+    # Example:
+    # annotations:
+    #   cert-manager.io/cluster-issuer: gentoo-lan-ca
+    annotations: {}
+
+    hosts:
+      - sso.gentoo.lan
+
+    paths:
+      - /
+
+    pathType: Prefix
+
+    tls:
+      - secretName: authentik-internal-tls
+        hosts:
+          - sso.gentoo.lan
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+worker:
+  replicas: 1
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+prometheus:
+  rules:
+    enabled: false

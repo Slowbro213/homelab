@@ -113,3 +113,12 @@ spec:
       ports:
         - protocol: TCP
           port: 9187
+    # Authentik
+    - from:
+        - podSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: authentik
+      ports:
+        - protocol: TCP
+          port: 5432
+
