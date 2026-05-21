@@ -28,7 +28,7 @@ collectors:
     enabled: false
 
 falco:
-  priority: warning
+  priority: notice
   json_output: true
   json_include_output_property: true
   json_include_output_fields_property: true
