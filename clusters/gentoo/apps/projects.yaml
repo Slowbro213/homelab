@@ -139,6 +139,8 @@ spec:
       kind: ClusterRoleBinding
   namespaceResourceWhitelist:
     - group: ""
+      kind: ConfigMap
+    - group: ""
       kind: ServiceAccount
     - group: networking.k8s.io
       kind: NetworkPolicy
