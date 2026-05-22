@@ -77,4 +77,6 @@ spec:
               app.kubernetes.io/name: traefik
       ports:
         - protocol: TCP
+          port: 8443
+        - protocol: TCP
           port: 443
