@@ -57,7 +57,8 @@ server:
   ingress:
     enabled: true
     ingressClassName: traefik
-    annotations: {}
+    annotations:
+      cert-manager.io/cluster-issuer: gentoo-internal-ca
     hosts:
       - sso.gentoo.lan
     paths:
