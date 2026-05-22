@@ -92,6 +92,8 @@ spec:
             }
 
         env:
+          - name: SSL_CERT_FILE
+            value: /etc/ssl/gentoo/ca.crt
           - name: AWS_ACCESS_KEY_ID
             valueFrom:
               secretKeyRef:
@@ -108,6 +110,8 @@ spec:
             mountPath: /etc/zot/auth
           - secretName: zot-oidc-credentials
             mountPath: /etc/zot/oidc
+          - secretName: gentoo-internal-ca-bundle
+            mountPath: /etc/ssl/gentoo
 
         service:
           type: ClusterIP
