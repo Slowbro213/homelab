@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  gentoo-lan.server: |
+    gentoo.lan:53 {
+      errors
+      cache 30
+      hosts {
+        10.43.187.55 sso.gentoo.lan
+        fallthrough
+      }
+    }

@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - namespaces.yaml
+  - coredns-custom.yaml
   - kyverno-policies.yaml
   - network-policies/apps.yaml
   - network-policies/cert-manager.yaml
