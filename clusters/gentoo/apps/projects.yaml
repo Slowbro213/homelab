@@ -82,6 +82,8 @@ spec:
       namespace: cert-manager
     - server: https://kubernetes.default.svc
       namespace: authentik
+    - server: https://kubernetes.default.svc
+      namespace: cloudflare
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
