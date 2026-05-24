@@ -45,6 +45,9 @@ metadata:
   namespace: databases
 spec:
   secretName: postgres-ha-server-tls
+  secretTemplate:
+    labels:
+      cnpg.io/reload: ""
   privateKey:
     algorithm: ECDSA
     size: 256
