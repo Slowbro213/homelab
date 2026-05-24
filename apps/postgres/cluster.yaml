@@ -5,6 +5,8 @@ metadata:
   namespace: databases
 spec:
   instances: 3
+  primaryUpdateMethod: switchover
+  primaryUpdateStrategy: unsupervised
   certificates:
     serverTLSSecret: postgres-ha-server-tls
     serverCASecret: postgres-ha-server-tls
