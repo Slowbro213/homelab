@@ -13,6 +13,28 @@ spec:
     helm:
       releaseName: monitoring
       valuesObject:
+        # k3s control-plane components are not exposed as scrapeable cluster services.
+        # Keep their "down" alerts disabled to avoid persistent false positives.
+        defaultRules:
+          rules:
+            kubeControllerManager: false
+            kubeProxy: false
+            kubeSchedulerAlerting: false
+            kubeSchedulerRecording: false
+            etcd: false
+
+        kubeControllerManager:
+          enabled: false
+
+        kubeProxy:
+          enabled: false
+
+        kubeScheduler:
+          enabled: false
+
+        kubeEtcd:
+          enabled: false
+
         grafana:
           envValueFrom:
             LOKI_BASIC_AUTH_USERNAME:
