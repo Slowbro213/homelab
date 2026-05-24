@@ -39,6 +39,18 @@ spec:
             defaultFsType: ext4
             reclaimPolicy: Retain
           extraObjects:
+            - apiVersion: longhorn.io/v1beta2
+              kind: RecurringJob
+              metadata:
+                name: daily-filesystem-trim
+                namespace: longhorn-system
+              spec:
+                cron: "17 3 * * *"
+                task: filesystem-trim
+                groups:
+                  - default
+                retain: 1
+                concurrency: 2
             - apiVersion: storage.k8s.io/v1
               kind: StorageClass
               metadata:
