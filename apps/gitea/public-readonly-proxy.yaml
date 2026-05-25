@@ -23,9 +23,8 @@ data:
       uwsgi_temp_path /tmp/uwsgi_temp;
       scgi_temp_path /tmp/scgi_temp;
 
-      upstream gitea {
-        server gitea-http.gitea.svc.cluster.local:3000;
-      }
+      resolver kube-dns.kube-system.svc.cluster.local valid=10s ipv6=off;
+      set $gitea_upstream http://gitea-http.gitea.svc.cluster.local:3000;
 
       server {
         listen 8080;
@@ -57,7 +56,7 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header X-Forwarded-Proto https;
-          proxy_pass http://gitea;
+          proxy_pass $gitea_upstream;
         }
 
         location ~* ^/.+\.git/git-upload-pack$ {
@@ -69,7 +68,7 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header X-Forwarded-Proto https;
-          proxy_pass http://gitea;
+          proxy_pass $gitea_upstream;
         }
       }
     }

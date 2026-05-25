@@ -98,6 +98,16 @@ spec:
         - protocol: TCP
           port: 5432
 
+
+    # Gitea application database access
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gitea
+      ports:
+        - protocol: TCP
+          port: 5432
+
     # CNPG replication between pods
     - from:
         - podSelector:
