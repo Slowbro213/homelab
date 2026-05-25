@@ -47,6 +47,7 @@ spec:
     - https://charts.bitnami.com/bitnami
     - https://falcosecurity.github.io/charts
     - https://charts.goauthentik.io
+    - https://dl.gitea.com/charts/
   destinations:
     - server: https://kubernetes.default.svc
       namespace: argocd
@@ -84,6 +85,8 @@ spec:
       namespace: authentik
     - server: https://kubernetes.default.svc
       namespace: cloudflare
+    - server: https://kubernetes.default.svc
+      namespace: gitea
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
@@ -101,6 +104,7 @@ metadata:
 spec:
   sourceRepos:
     - https://github.com/Slowbro213/homelab.git
+    - https://git.thanaspapa.com/*
   destinations:
     - server: https://kubernetes.default.svc
       namespace: apps

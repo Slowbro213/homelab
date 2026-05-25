@@ -1,0 +1,144 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  project: infra
+
+  sources:
+    - repoURL: https://dl.gitea.com/charts/
+      chart: gitea
+      targetRevision: 12.6.0
+      helm:
+        releaseName: gitea
+        valuesObject:
+          image:
+            rootless: true
+          replicaCount: 1
+          podSecurityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+          persistence:
+            enabled: true
+            create: true
+            claimName: gitea-shared-storage
+            size: 20Gi
+            accessModes:
+              - ReadWriteOnce
+            storageClass: longhorn-rwo
+          service:
+            http:
+              type: ClusterIP
+              port: 3000
+              clusterIP: null
+            ssh:
+              type: ClusterIP
+              port: 22
+              clusterIP: null
+          ingress:
+            enabled: false
+          postgresql-ha:
+            enabled: false
+          postgresql:
+            enabled: false
+          valkey-cluster:
+            enabled: false
+          valkey:
+            enabled: false
+          gitea:
+            admin:
+              existingSecret: gitea-admin
+              email: admin@thanaspapa.com
+              passwordMode: initialOnlyNoReset
+            additionalConfigFromEnvs:
+              - name: GITEA__database__PASSWD
+                valueFrom:
+                  secretKeyRef:
+                    name: gitea-db
+                    key: password
+              - name: GITEA__security__SECRET_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: gitea-app-secrets
+                    key: secret_key
+              - name: GITEA__security__INTERNAL_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: gitea-app-secrets
+                    key: internal_token
+              - name: GITEA__oauth2__JWT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: gitea-app-secrets
+                    key: jwt_secret
+            config:
+              server:
+                DOMAIN: git.thanaspapa.com
+                ROOT_URL: https://git.thanaspapa.com/
+                PROTOCOL: http
+                HTTP_PORT: 3000
+                DISABLE_SSH: true
+                START_SSH_SERVER: false
+                SSH_DOMAIN: git.gentoo.lan
+              database:
+                DB_TYPE: postgres
+                HOST: postgres-ha-rw.databases.svc.cluster.local:5432
+                NAME: gitea
+                USER: gitea
+                SSL_MODE: disable
+              service:
+                DISABLE_REGISTRATION: true
+                REQUIRE_SIGNIN_VIEW: false
+                SHOW_REGISTRATION_BUTTON: false
+              repository:
+                DEFAULT_PRIVATE: public
+                DEFAULT_PUSH_CREATE_PRIVATE: false
+                ENABLE_PUSH_CREATE_USER: false
+                ENABLE_PUSH_CREATE_ORG: false
+                DISABLE_HTTP_GIT: false
+              actions:
+                ENABLED: true
+              packages:
+                ENABLED: false
+              indexer:
+                ISSUE_INDEXER_TYPE: db
+                REPO_INDEXER_ENABLED: true
+                REPO_INDEXER_TYPE: bleve
+    - repoURL: https://github.com/Slowbro213/homelab.git
+      targetRevision: main
+      path: apps/gitea
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitea
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

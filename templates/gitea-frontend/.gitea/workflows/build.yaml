@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  image:
+    runs-on: gitea-rootless-buildkit
+    env:
+      REGISTRY: registry.gentoo.lan
+      IMAGE_REPO: frontends/${{ gitea.event.repository.name }}
+      BUILDKIT_HOST: tcp://buildkitd.gitea-runners.svc.cluster.local:1234
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure registry auth
+        shell: sh
+        run: |
+          mkdir -p ~/.docker
+          AUTH="$(printf '%s:%s' "$ZOT_USERNAME" "$ZOT_PASSWORD" | base64 | tr -d '\n')"
+          cat > ~/.docker/config.json <<EOF_AUTH
+          {"auths":{"${REGISTRY}":{"auth":"${AUTH}"}}}
+          EOF_AUTH
+
+      - name: Build and push immutable image
+        shell: sh
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_REPO}:${GITHUB_SHA}"
+          buildctl --addr "${BUILDKIT_HOST}" build \
+            --frontend dockerfile.v0 \
+            --local context=. \
+            --local dockerfile=. \
+            --output "type=image,name=${IMAGE},push=true"
+          echo "Built ${IMAGE}"
+
+      - name: Push branch convenience tag
+        shell: sh
+        run: |
+          IMAGE="${REGISTRY}/${IMAGE_REPO}:${GITHUB_SHA}"
+          MAIN_IMAGE="${REGISTRY}/${IMAGE_REPO}:main"
+          crane copy "${IMAGE}" "${MAIN_IMAGE}"
