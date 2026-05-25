@@ -80,22 +80,3 @@ spec:
           port: 8443
         - protocol: TCP
           port: 443
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-trivy-db-download
-  namespace: registry
-spec:
-  podSelector: {}
-  policyTypes:
-    - Egress
-  egress:
-    # Kubernetes NetworkPolicy cannot restrict by DNS hostname.
-    # This permits zot to fetch Trivy DB artifacts from ghcr.io over HTTPS.
-    - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-      ports:
-        - protocol: TCP
-          port: 443
