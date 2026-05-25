@@ -110,6 +110,8 @@ spec:
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             httpGet:
               path: /healthz
@@ -138,6 +140,8 @@ spec:
         - name: config
           configMap:
             name: gitea-public-readonly-nginx
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
