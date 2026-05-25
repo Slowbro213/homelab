@@ -24,10 +24,10 @@ data:
       scgi_temp_path /tmp/scgi_temp;
 
       resolver kube-dns.kube-system.svc.cluster.local valid=10s ipv6=off;
-      set $gitea_upstream http://gitea-http.gitea.svc.cluster.local:3000;
 
       server {
         listen 8080;
+        set $gitea_upstream http://gitea-http.gitea.svc.cluster.local:3000;
         server_name git.thanaspapa.com;
 
         location = /healthz {
