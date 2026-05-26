@@ -47,10 +47,14 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: rootlesskit-tmp
+              mountPath: /home/user/.local/tmp
             - name: state
               mountPath: /home/user/.local/share/buildkit
       volumes:
         - name: tmp
+          emptyDir: {}
+        - name: rootlesskit-tmp
           emptyDir: {}
         - name: state
           emptyDir: {}
