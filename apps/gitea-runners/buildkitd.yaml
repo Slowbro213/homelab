@@ -14,6 +14,8 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: buildkitd
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/buildkitd: unconfined
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -22,7 +24,7 @@ spec:
         runAsGroup: 1000
         fsGroup: 1000
         seccompProfile:
-          type: RuntimeDefault
+          type: Unconfined
       containers:
         - name: buildkitd
           image: moby/buildkit:v0.24.0-rootless
@@ -33,8 +35,9 @@ spec:
             - name: buildkit
               containerPort: 1234
           securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: true
+            readOnlyRootFilesystem: false
+            privileged: true
             capabilities:
               drop:
                 - ALL
