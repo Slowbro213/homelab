@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea-runners
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  project: infra
+
+  source:
+    repoURL: https://github.com/Slowbro213/homelab.git
+    targetRevision: main
+    path: apps/gitea-runners
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitea-runners
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

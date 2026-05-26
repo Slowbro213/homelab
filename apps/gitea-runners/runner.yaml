@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea-runner
+  namespace: gitea-runners
+  labels:
+    app.kubernetes.io/name: gitea-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gitea-runner
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gitea-runner
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: runner
+          # Replace with a custom runner image that includes buildctl, trivy, and crane.
+          image: gitea/act_runner:0.2.11
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GITEA_INSTANCE_URL
+              value: https://git.gentoo.lan
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/gentoo-ca.crt
+            - name: GITEA_RUNNER_REGISTRATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gitea-runner-registration
+                  key: token
+          args:
+            - daemon
+            - --labels
+            # Host mode keeps jobs unprivileged; tools must exist in runner image.
+            - gitea-rootless-buildkit:host
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 768Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: certs
+              mountPath: /etc/ssl/certs/gentoo-ca.crt
+              subPath: ca.crt
+              readOnly: true
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: certs
+          secret:
+            secretName: gentoo-internal-ca-bundle

@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildkitd
+  namespace: gitea-runners
+  labels:
+    app.kubernetes.io/name: buildkitd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: buildkitd
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: buildkitd
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: buildkitd
+          image: moby/buildkit:v0.24.0-rootless
+          args:
+            - --addr
+            - tcp://0.0.0.0:1234
+          ports:
+            - name: buildkit
+              containerPort: 1234
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: state
+              mountPath: /home/user/.local/share/buildkit
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: state
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: buildkitd
+  namespace: gitea-runners
+  labels:
+    app.kubernetes.io/name: buildkitd
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: buildkitd
+  ports:
+    - name: buildkit
+      port: 1234
+      targetPort: buildkit

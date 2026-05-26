@@ -87,6 +87,8 @@ spec:
       namespace: cloudflare
     - server: https://kubernetes.default.svc
       namespace: gitea
+    - server: https://kubernetes.default.svc
+      namespace: gitea-runners
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
@@ -109,6 +111,37 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: apps
   clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: Service
+    - group: apps
+      kind: Deployment
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: frontends
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-100"
+spec:
+  sourceRepos:
+    - https://git.thanaspapa.com/*
+    - https://github.com/Slowbro213/homelab.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
   namespaceResourceWhitelist:
     - group: ""
       kind: ConfigMap

@@ -1,0 +1,111 @@
+# ============================================================
+# Namespace: gitea-runners
+# ============================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: gitea-runners
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: gitea-runners
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-runner-egress
+  namespace: gitea-runners
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gitea-runner
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gitea
+      ports:
+        - protocol: TCP
+          port: 3000
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: registry
+      ports:
+        - protocol: TCP
+          port: 5000
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: buildkitd
+      ports:
+        - protocol: TCP
+          port: 1234
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-buildkit-egress
+  namespace: gitea-runners
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: buildkitd
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: registry
+      ports:
+        - protocol: TCP
+          port: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-buildkit-ingress
+  namespace: gitea-runners
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: buildkitd
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: gitea-runner
+      ports:
+        - protocol: TCP
+          port: 1234

@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: REPLACE_APP_NAME
+  namespace: argocd
+spec:
+  project: frontends
+  source:
+    repoURL: https://git.thanaspapa.com/REPLACE_OWNER/REPLACE_REPO.git
+    targetRevision: main
+    path: deploy/k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: REPLACE_NAMESPACE
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

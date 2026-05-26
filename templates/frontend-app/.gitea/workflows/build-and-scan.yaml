@@ -1,4 +1,4 @@
-name: build
+name: build-and-scan
 
 on:
   push:
@@ -34,11 +34,26 @@ jobs:
             --local context=. \
             --local dockerfile=. \
             --output "type=image,name=${IMAGE},push=true"
-          echo "Built ${IMAGE}"
+          echo "IMAGE=${IMAGE}" >> "$GITHUB_ENV"
 
-      - name: Push branch convenience tag
+      - name: Scan image with Trivy (fail HIGH/CRITICAL)
         shell: sh
         run: |
-          IMAGE="${REGISTRY}/${IMAGE_REPO}:${GITHUB_SHA}"
+          trivy image \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            "${IMAGE}"
+
+      - name: Resolve image digest
+        shell: sh
+        run: |
+          DIGEST="$(crane digest "${IMAGE}")"
+          echo "IMAGE_DIGEST=${DIGEST}" >> "$GITHUB_ENV"
+          echo "Immutable image: ${IMAGE%@*}@${DIGEST}"
+
+      - name: Publish branch convenience tag
+        shell: sh
+        run: |
           MAIN_IMAGE="${REGISTRY}/${IMAGE_REPO}:main"
           crane copy "${IMAGE}" "${MAIN_IMAGE}"
