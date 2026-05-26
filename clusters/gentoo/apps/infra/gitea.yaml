@@ -73,6 +73,13 @@ spec:
               existingSecret: gitea-admin
               email: admin@thanaspapa.com
               passwordMode: initialOnlyNoReset
+            oauth:
+              - name: authentik
+                provider: openidConnect
+                existingSecret: gitea-authentik-secret
+                autoDiscoverUrl: https://sso.gentoo.lan/application/o/gitea/.well-known/openid-configuration
+                iconUrl: https://sso.gentoo.lan/static/dist/assets/icons/icon.png
+                scopes: email profile
             additionalConfigFromEnvs:
               - name: GITEA__database__PASSWD
                 valueFrom:
@@ -113,6 +120,9 @@ spec:
                 DISABLE_REGISTRATION: true
                 REQUIRE_SIGNIN_VIEW: false
                 SHOW_REGISTRATION_BUTTON: false
+                ENABLE_PASSWORD_SIGNIN_FORM: false
+                ENABLE_BASIC_AUTHENTICATION: false
+                ALLOW_ONLY_EXTERNAL_REGISTRATION: true
               repository:
                 DEFAULT_PRIVATE: public
                 DEFAULT_PUSH_CREATE_PRIVATE: false
