@@ -7,11 +7,10 @@ on:
 
 jobs:
   image:
-    runs-on: gitea-rootless-buildkit
+    runs-on: gitea-kaniko
     env:
       REGISTRY: registry.gentoo.lan
       IMAGE_REPO: frontends/${{ gitea.event.repository.name }}
-      BUILDKIT_HOST: tcp://buildkitd.gitea-runners.svc.cluster.local:1234
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,11 +28,11 @@ jobs:
         shell: sh
         run: |
           IMAGE="${REGISTRY}/${IMAGE_REPO}:${GITHUB_SHA}"
-          buildctl --addr "${BUILDKIT_HOST}" build \
-            --frontend dockerfile.v0 \
-            --local context=. \
-            --local dockerfile=. \
-            --output "type=image,name=${IMAGE},push=true"
+          kaniko-executor \
+            --context "${PWD}" \
+            --dockerfile "${PWD}/Dockerfile" \
+            --destination "${IMAGE}" \
+            --snapshot-mode=redo
           echo "IMAGE=${IMAGE}" >> "$GITHUB_ENV"
 
       - name: Scan image with Trivy (fail HIGH/CRITICAL)

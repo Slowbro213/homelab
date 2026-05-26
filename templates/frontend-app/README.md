@@ -16,14 +16,13 @@ You provide your own `Dockerfile` per repo. A sample is included in `Dockerfile.
 
 ## Runner Requirements
 
-The runner label used by this template is `gitea-rootless-buildkit`.
+The runner label used by this template is `gitea-kaniko`.
 
 Runner environment must provide:
 
-- `buildctl`
+- `kaniko-executor`
 - `crane`
 - `trivy`
-- access to `tcp://buildkitd.gitea-runners.svc.cluster.local:1234`
 - access to `registry.gentoo.lan`
 - secrets `ZOT_USERNAME` and `ZOT_PASSWORD`
 
