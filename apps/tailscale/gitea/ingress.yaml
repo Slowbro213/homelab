@@ -7,7 +7,7 @@ spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: gitea-http
+      name: gitea-tailscale-backend
       port:
         number: 3000
   tls:
