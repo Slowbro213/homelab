@@ -41,6 +41,24 @@ spec:
               memory: 512Mi
             limits:
               memory: 1Gi
+          deployment:
+            env:
+              - name: SSL_CERT_FILE
+                value: /etc/ssl/gentoo/ca.crt
+          extraVolumes:
+            - name: gentoo-internal-ca
+              secret:
+                secretName: gentoo-internal-ca-bundle
+          extraInitVolumeMounts:
+            - name: gentoo-internal-ca
+              mountPath: /etc/ssl/gentoo/ca.crt
+              subPath: ca.crt
+              readOnly: true
+          extraContainerVolumeMounts:
+            - name: gentoo-internal-ca
+              mountPath: /etc/ssl/gentoo/ca.crt
+              subPath: ca.crt
+              readOnly: true
           persistence:
             enabled: true
             create: true
