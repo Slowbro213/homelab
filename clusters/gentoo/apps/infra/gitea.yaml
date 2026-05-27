@@ -121,8 +121,8 @@ spec:
                     key: jwt_secret
             config:
               server:
-                DOMAIN: git.thanaspapa.com
-                ROOT_URL: https://git.thanaspapa.com/
+                DOMAIN: gitea-gitea-tailscale.tail27527e.ts.net
+                ROOT_URL: https://gitea-gitea-tailscale.tail27527e.ts.net/
                 PROTOCOL: http
                 HTTP_PORT: 3000
                 DISABLE_SSH: true
