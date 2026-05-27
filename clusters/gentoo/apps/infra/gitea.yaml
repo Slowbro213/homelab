@@ -95,8 +95,8 @@ spec:
               - name: authentik
                 provider: openidConnect
                 existingSecret: gitea-authentik-secret
-                autoDiscoverUrl: https://sso.gentoo.lan/application/o/gitea/.well-known/openid-configuration
-                iconUrl: https://sso.gentoo.lan/static/dist/assets/icons/icon.png
+                autoDiscoverUrl: https://authentik-authentik-tailscale.tail27527e.ts.net/application/o/gitea/.well-known/openid-configuration
+                iconUrl: https://authentik-authentik-tailscale.tail27527e.ts.net/static/dist/assets/icons/icon.png
                 scopes: email profile
             additionalConfigFromEnvs:
               - name: GITEA__database__PASSWD
