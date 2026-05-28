@@ -11,6 +11,9 @@ spec:
     serverTLSSecret: postgres-ha-server-tls
     serverCASecret: postgres-ha-server-tls
   postgresql:
+    pg_hba:
+      - hostnossl all all all reject
+      - hostssl all all all scram-sha-256
     parameters:
       max_connections: "200"
       shared_buffers: "1024MB"
