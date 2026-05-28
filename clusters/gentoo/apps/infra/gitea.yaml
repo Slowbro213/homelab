@@ -99,7 +99,6 @@ spec:
                 iconUrl: https://authentik-authentik-tailscale.tail27527e.ts.net/static/dist/assets/icons/icon.png
                 scopes: email profile
                 enableAutoRegistration: false
-                accountLinking: login
                 username: preferred_username
             additionalConfigFromEnvs:
               - name: GITEA__database__PASSWD
