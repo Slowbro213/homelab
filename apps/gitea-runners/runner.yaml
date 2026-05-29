@@ -16,6 +16,10 @@ spec:
         app.kubernetes.io/name: gitea-runner
     spec:
       automountServiceAccountToken: false
+      hostAliases:
+      - ip: 10.43.187.55
+        hostnames:
+          - git.gentoo.lan
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -30,7 +34,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: GITEA_INSTANCE_URL
-              value: https://gitea-gitea-tailscale.tail27527e.ts.net
+              value: https://git.gentoo.lan
             - name: SSL_CERT_FILE
               value: /etc/ssl/certs/gentoo-ca.crt
             - name: HOME
