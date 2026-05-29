@@ -38,11 +38,9 @@ spec:
                 secretKeyRef:
                   name: gitea-runner-registration
                   key: token
-          args:
-            - daemon
-            - --labels
             # Host mode keeps jobs unprivileged; tools must exist in runner image.
-            - gitea-kaniko:host
+            - name: GITEA_RUNNER_LABELS
+              value: gitea-kaniko:host
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
