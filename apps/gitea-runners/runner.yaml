@@ -33,6 +33,10 @@ spec:
               value: https://git.gentoo.lan
             - name: SSL_CERT_FILE
               value: /etc/ssl/certs/gentoo-ca.crt
+            - name: HOME
+              value: /data
+            - name: XDG_CACHE_HOME
+              value: /data/.cache
             - name: GITEA_RUNNER_REGISTRATION_TOKEN
               valueFrom:
                 secretKeyRef:
