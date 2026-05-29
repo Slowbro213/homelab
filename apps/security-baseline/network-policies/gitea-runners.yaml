@@ -51,6 +51,17 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 443
+
+    - to:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: gitea
       ports:
         - protocol: TCP

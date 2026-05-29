@@ -10,6 +10,7 @@ data:
       cache 30
       hosts {
         10.43.187.55 sso.gentoo.lan
+        10.43.187.55 git.gentoo.lan
         fallthrough
       }
     }
