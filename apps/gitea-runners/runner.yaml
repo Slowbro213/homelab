@@ -30,7 +30,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: GITEA_INSTANCE_URL
-              value: https://git.gentoo.lan
+              value: https://gitea-gitea-tailscale.tail27527e.ts.net
             - name: SSL_CERT_FILE
               value: /etc/ssl/certs/gentoo-ca.crt
             - name: HOME
