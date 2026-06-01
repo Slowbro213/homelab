@@ -72,9 +72,13 @@ spec:
               mountPath: /etc/ssl/certs/gentoo-ca.crt
               subPath: ca.crt
               readOnly: true
+            - name: kaniko-dir
+              mountPath: /kaniko
       volumes:
         - name: data
           emptyDir: {}
         - name: certs
           secret:
             secretName: gentoo-internal-ca-bundle
+        - name: kaniko-dir
+          emptyDir: {}
