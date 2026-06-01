@@ -91,6 +91,39 @@ spec:
                     - monitoring
                   names:
                     - monitoring-prometheus-node-exporter*
+                    require-run-as-non-root-user:
+            any:
+              - resources:
+                  kinds:
+                    - Deployment
+                    - Pod
+                  namespaces:
+                    - gitea-runners
+                  names:
+                    - gitea-runner
+                    - gitea-runner-*
+          require-run-as-nonroot:
+            any:
+              - resources:
+                  kinds:
+                    - Deployment
+                    - Pod
+                  namespaces:
+                    - gitea-runners
+                  names:
+                    - gitea-runner
+                    - gitea-runner-*
+          disallow-capabilities-strict:
+            any:
+              - resources:
+                  kinds:
+                    - Deployment
+                    - Pod
+                  namespaces:
+                    - gitea-runners
+                  names:
+                    - gitea-runner
+                    - gitea-runner-*
         background: true
 
   syncPolicy:
