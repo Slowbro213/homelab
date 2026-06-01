@@ -17,23 +17,23 @@ spec:
     spec:
       imagePullSecrets:
         - name: zot-pull
+
       automountServiceAccountToken: false
+
       hostAliases:
-      - ip: 10.43.187.55
-        hostnames:
-          - git.gentoo.lan
+        - ip: 10.43.187.55
+          hostnames:
+            - git.gentoo.lan
+
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+
       containers:
         - name: runner
-          # Replace with a custom runner image that includes kaniko, trivy, and crane.
           image: registry.gentoo.lan/infra/gitea-runner-tools:0.2.11-1
           imagePullPolicy: IfNotPresent
+
           env:
             - name: GITEA_INSTANCE_URL
               value: https://git.gentoo.lan
@@ -50,35 +50,37 @@ spec:
                 secretKeyRef:
                   name: gitea-runner-registration
                   key: token
-            # Host mode keeps jobs unprivileged; tools must exist in runner image.
             - name: GITEA_RUNNER_LABELS
               value: gitea-kaniko:host
+
           securityContext:
+            runAsUser: 0
+            runAsGroup: 0
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
-            capabilities:
-              drop:
-                - ALL
+
           resources:
             requests:
               cpu: 100m
               memory: 256Mi
             limits:
               memory: 768Mi
+
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: kaniko-dir
+              mountPath: /kaniko
             - name: certs
               mountPath: /etc/ssl/certs/gentoo-ca.crt
               subPath: ca.crt
               readOnly: true
-            - name: kaniko-dir
-              mountPath: /kaniko
+
       volumes:
         - name: data
+          emptyDir: {}
+        - name: kaniko-dir
           emptyDir: {}
         - name: certs
           secret:
             secretName: gentoo-internal-ca-bundle
-        - name: kaniko-dir
-          emptyDir: {}
