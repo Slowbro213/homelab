@@ -106,7 +106,7 @@ metadata:
 spec:
   sourceRepos:
     - https://github.com/Slowbro213/homelab.git
-    - https://git.thanaspapa.com/thanas-papa/cntdwn.git
+    - https://git.thanaspapa.com/thanas-papa/*
   destinations:
     - server: https://kubernetes.default.svc
       namespace: apps
@@ -134,7 +134,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-100"
 spec:
   sourceRepos:
-    - https://git.thanaspapa.com/*
+    - https://git.thanaspapa.com/thanas-papa/cntdwn.git
     - https://github.com/Slowbro213/homelab.git
   destinations:
     - server: https://kubernetes.default.svc
