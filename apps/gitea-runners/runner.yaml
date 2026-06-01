@@ -30,7 +30,7 @@ spec:
       containers:
         - name: runner
           # Replace with a custom runner image that includes kaniko, trivy, and crane.
-          image: gitea/act_runner:0.2.11
+          image: registry.gentoo.lan/infra/gitea-runner-tools:0.2.11-1
           imagePullPolicy: IfNotPresent
           env:
             - name: GITEA_INSTANCE_URL
