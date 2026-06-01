@@ -91,7 +91,7 @@ spec:
                     - monitoring
                   names:
                     - monitoring-prometheus-node-exporter*
-                    require-run-as-non-root-user:
+          require-run-as-non-root-user:
             any:
               - resources:
                   kinds:
