@@ -3,6 +3,14 @@ kind: Application
 metadata:
   name: cntdwn
   namespace: argocd
+  labels:
+    image-updater.gentoo.lan/enabled: "true"
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: app=registry.gentoo.lan/frontends/cntdwn:main
+    argocd-image-updater.argoproj.io/app.update-strategy: digest
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-gitea
+    argocd-image-updater.argoproj.io/git-repository: http://gitea-http.gitea.svc.cluster.local:3000/thanas-papa/cntdwn.git
+    argocd-image-updater.argoproj.io/git-branch: main
 spec:
   project: frontends
 

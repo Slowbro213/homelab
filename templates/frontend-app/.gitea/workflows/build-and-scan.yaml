@@ -1,9 +1,13 @@
 name: build-and-scan
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
+    paths-ignore:
+      - ".argocd-source-*.yaml"
+      - "deploy/k8s/**"
 
 jobs:
   image:
@@ -11,28 +15,66 @@ jobs:
     env:
       REGISTRY: registry.gentoo.lan
       IMAGE_REPO: frontends/${{ gitea.event.repository.name }}
+      ZOT_USERNAME: ${{ secrets.ZOT_USERNAME }}
+      ZOT_PASSWORD: ${{ secrets.ZOT_PASSWORD }}
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        shell: sh
+        run: |
+          git init .
+          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          git config --global --add safe.directory "$PWD"
+
+          if [ -n "${GITHUB_TOKEN:-}" ]; then
+            git -c "http.extraHeader=Authorization: token ${GITHUB_TOKEN}" fetch --depth 1 origin "${GITHUB_SHA}"
+          else
+            git fetch --depth 1 origin "${GITHUB_SHA}"
+          fi
+
+          git checkout --detach FETCH_HEAD
 
       - name: Configure registry auth
         shell: sh
         run: |
-          mkdir -p ~/.docker
-          AUTH="$(printf '%s:%s' "$ZOT_USERNAME" "$ZOT_PASSWORD" | base64 | tr -d '\n')"
-          cat > ~/.docker/config.json <<EOF_AUTH
+          set -eu
+
+          export DOCKER_CONFIG=/kaniko/.docker
+          mkdir -p "$DOCKER_CONFIG"
+
+          ZOT_USERNAME="$(printf '%s' "$ZOT_USERNAME" | tr -d '\r\n')"
+          ZOT_PASSWORD="$(printf '%s' "$ZOT_PASSWORD" | tr -d '\r\n')"
+
+          AUTH="$(printf '%s:%s' "$ZOT_USERNAME" "$ZOT_PASSWORD" | base64 | tr -d '\r\n')"
+
+          cat > "$DOCKER_CONFIG/config.json" <<EOF
           {"auths":{"${REGISTRY}":{"auth":"${AUTH}"}}}
-          EOF_AUTH
+          EOF
+
+          echo "DOCKER_CONFIG=$DOCKER_CONFIG" >> "$GITHUB_ENV"
+
+          test -s "$DOCKER_CONFIG/config.json"
+          grep -q "\"${REGISTRY}\"" "$DOCKER_CONFIG/config.json"
+          grep -q '"auths"' "$DOCKER_CONFIG/config.json"
 
       - name: Build and push immutable image
         shell: sh
         run: |
+          set -eu
+
+          export DOCKER_CONFIG=/kaniko/.docker
+
           IMAGE="${REGISTRY}/${IMAGE_REPO}:${GITHUB_SHA}"
+
+          test -f "${PWD}/Dockerfile"
+          test -s "${DOCKER_CONFIG}/config.json"
+
           kaniko-executor \
             --context "${PWD}" \
             --dockerfile "${PWD}/Dockerfile" \
             --destination "${IMAGE}" \
             --snapshot-mode=redo
+
           echo "IMAGE=${IMAGE}" >> "$GITHUB_ENV"
 
       - name: Scan image with Trivy (fail HIGH/CRITICAL)
@@ -49,7 +91,7 @@ jobs:
         run: |
           DIGEST="$(crane digest "${IMAGE}")"
           echo "IMAGE_DIGEST=${DIGEST}" >> "$GITHUB_ENV"
-          echo "Immutable image: ${IMAGE%@*}@${DIGEST}"
+          echo "Immutable image: ${REGISTRY}/${IMAGE_REPO}@${DIGEST}"
 
       - name: Publish branch convenience tag
         shell: sh

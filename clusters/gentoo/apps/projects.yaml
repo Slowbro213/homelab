@@ -48,6 +48,7 @@ spec:
     - https://falcosecurity.github.io/charts
     - https://charts.goauthentik.io
     - https://dl.gitea.com/charts/
+    - https://argoproj.github.io/argo-helm
   destinations:
     - server: https://kubernetes.default.svc
       namespace: argocd
@@ -134,7 +135,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-100"
 spec:
   sourceRepos:
-    - https://git.thanaspapa.com/thanas-papa/cntdwn.git
+    - https://git.thanaspapa.com/thanas-papa/*
     - https://github.com/Slowbro213/homelab.git
   destinations:
     - server: https://kubernetes.default.svc

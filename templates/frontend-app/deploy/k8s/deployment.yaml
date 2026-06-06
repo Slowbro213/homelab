@@ -16,19 +16,29 @@ spec:
         app.kubernetes.io/name: REPLACE_APP_NAME
     spec:
       automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: zot-pull
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
         runAsGroup: 101
+        fsGroup: 101
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: REPLACE_IMAGE_REF
-          imagePullPolicy: IfNotPresent
+          image: registry.gentoo.lan/frontends/REPLACE_REPO:main
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8080
+          volumeMounts:
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: run
+              mountPath: /var/run
+            - name: tmp
+              mountPath: /tmp
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -41,3 +51,10 @@ spec:
               memory: 64Mi
             limits:
               memory: 128Mi
+      volumes:
+        - name: cache
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

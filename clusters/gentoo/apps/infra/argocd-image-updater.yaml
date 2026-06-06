@@ -1,0 +1,75 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-image-updater
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "22"
+spec:
+  project: infra
+
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    chart: argocd-image-updater
+    targetRevision: 1.2.2
+    helm:
+      releaseName: argocd-image-updater
+      valuesObject:
+        config:
+          git.user: argocd-image-updater
+          git.email: argocd-image-updater@gentoo.lan
+          git.commit-message-template: "chore(images): update image references"
+          log.level: info
+          registries:
+            - name: Zot
+              prefix: registry.gentoo.lan
+              api_url: https://registry.gentoo.lan
+              ping: true
+              credentials: pullsecret:argocd/zot-pull
+
+        extraEnv:
+          - name: SSL_CERT_FILE
+            value: /etc/ssl/gentoo/ca.crt
+          - name: GIT_SSL_CAINFO
+            value: /etc/ssl/gentoo/ca.crt
+
+        volumes:
+          - name: gentoo-internal-ca
+            secret:
+              secretName: gentoo-internal-ca-bundle
+
+        volumeMounts:
+          - name: gentoo-internal-ca
+            mountPath: /etc/ssl/gentoo
+            readOnly: true
+
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+
+        extraObjects:
+          - apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+            kind: ImageUpdater
+            metadata:
+              name: frontend-apps
+              namespace: argocd
+            spec:
+              applicationRefs:
+                - namePattern: "*"
+                  labelSelectors:
+                    matchLabels:
+                      image-updater.gentoo.lan/enabled: "true"
+                  useAnnotations: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true

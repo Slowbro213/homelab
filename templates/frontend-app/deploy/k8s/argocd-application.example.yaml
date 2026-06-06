@@ -3,6 +3,14 @@ kind: Application
 metadata:
   name: REPLACE_APP_NAME
   namespace: argocd
+  labels:
+    image-updater.gentoo.lan/enabled: "true"
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: app=registry.gentoo.lan/frontends/REPLACE_REPO:main
+    argocd-image-updater.argoproj.io/app.update-strategy: digest
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/argocd-image-updater-gitea
+    argocd-image-updater.argoproj.io/git-repository: http://gitea-http.gitea.svc.cluster.local:3000/REPLACE_OWNER/REPLACE_REPO.git
+    argocd-image-updater.argoproj.io/git-branch: main
 spec:
   project: frontends
   source:
