@@ -101,3 +101,30 @@ jobs:
         run: |
           MAIN_IMAGE="${REGISTRY}/${IMAGE_REPO}:main"
           crane copy "${IMAGE}" "${MAIN_IMAGE}"
+
+      - name: Update Argo CD image override
+        shell: sh
+        run: |
+          set -eu
+
+          APP_NAME="${GITHUB_REPOSITORY##*/}"
+          OVERRIDE_FILE="deploy/k8s/.argocd-source-${APP_NAME}.yaml"
+
+          mkdir -p deploy/k8s
+          cat > "${OVERRIDE_FILE}" <<EOF
+          kustomize:
+            images:
+              - ${REGISTRY}/${IMAGE_REPO}=${IMAGE}
+          EOF
+
+          git config user.name "gitea-actions"
+          git config user.email "gitea-actions@gentoo.lan"
+          git add "${OVERRIDE_FILE}"
+
+          if git diff --cached --quiet; then
+            echo "Argo CD image override already points at ${IMAGE}"
+            exit 0
+          fi
+
+          git commit -m "chore(deploy): update ${APP_NAME} image"
+          git -c "http.extraHeader=Authorization: token ${GITEA_TOKEN}" push origin HEAD:main
