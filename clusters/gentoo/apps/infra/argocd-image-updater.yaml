@@ -64,6 +64,7 @@ spec:
                       imageName: registry.gentoo.lan/frontends/cntdwn:main
                       commonUpdateSettings:
                         updateStrategy: digest
+                        forceUpdate: true
                   writeBackConfig:
                     method: git:secret:argocd/argocd-image-updater-gitea
                     gitConfig:
