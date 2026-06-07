@@ -17,17 +17,20 @@ jobs:
       IMAGE_REPO: frontends/${{ gitea.event.repository.name }}
       ZOT_USERNAME: ${{ secrets.ZOT_USERNAME }}
       ZOT_PASSWORD: ${{ secrets.ZOT_PASSWORD }}
+      GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
 
     steps:
       - name: Checkout
         shell: sh
         run: |
           git init .
-          git remote add origin "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+          GITEA_URL="${GITEA_INSTANCE_URL:-$GITHUB_SERVER_URL}"
+          GITEA_URL="${GITEA_URL%/}"
+          git remote add origin "${GITEA_URL}/${GITHUB_REPOSITORY}.git"
           git config --global --add safe.directory "$PWD"
 
-          if [ -n "${GITHUB_TOKEN:-}" ]; then
-            git -c "http.extraHeader=Authorization: token ${GITHUB_TOKEN}" fetch --depth 1 origin "${GITHUB_SHA}"
+          if [ -n "${GITEA_TOKEN:-}" ]; then
+            git -c "http.extraHeader=Authorization: token ${GITEA_TOKEN}" fetch --depth 1 origin "${GITHUB_SHA}"
           else
             git fetch --depth 1 origin "${GITHUB_SHA}"
           fi

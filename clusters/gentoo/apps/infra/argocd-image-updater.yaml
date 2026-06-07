@@ -58,6 +58,17 @@ spec:
               namespace: argocd
             spec:
               applicationRefs:
+                - namePattern: "cntdwn"
+                  images:
+                    - alias: app
+                      imageName: registry.gentoo.lan/frontends/cntdwn:main
+                      commonUpdateSettings:
+                        updateStrategy: digest
+                  writeBackConfig:
+                    method: git:secret:argocd/argocd-image-updater-gitea
+                    gitConfig:
+                      repository: http://gitea-http.gitea.svc.cluster.local:3000/thanas-papa/cntdwn.git
+                      branch: main
                 - namePattern: "*"
                   labelSelectors:
                     matchLabels:
