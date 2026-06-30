@@ -28,6 +28,8 @@ collectors:
     enabled: false
 
 falco:
+  base_syscalls:
+    repair: true
   priority: notice
   json_output: true
   json_include_output_property: true
@@ -72,6 +74,7 @@ falcosidekick:
   config:
     alertmanager:
       hostport: http://monitoring-kube-prometheus-alertmanager.monitoring.svc.cluster.local:9093
+      endpoint: /api/v2/alerts
       minimumpriority: warning
       checkcert: false
   webui:
