@@ -14,12 +14,16 @@ spec:
     roles:
       # Owner of the `pclub` database (see database-programmingclub.yaml). The password comes
       # from Vault via the programmingclub-db VaultStaticSecret in this namespace.
+      # connectionLimit and inherit are defaulted by CNPG; spelling them out keeps ArgoCD
+      # from reporting the cluster as permanently OutOfSync against the mutated live object.
       - name: pclub
         ensure: present
         login: true
         superuser: false
         createdb: false
         createrole: false
+        inherit: true
+        connectionLimit: -1
         passwordSecret:
           name: programmingclub-db
   postgresql:
