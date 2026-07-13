@@ -10,6 +10,18 @@ spec:
   certificates:
     serverTLSSecret: postgres-ha-server-tls
     serverCASecret: postgres-ha-server-tls
+  managed:
+    roles:
+      # Owner of the `pclub` database (see database-programmingclub.yaml). The password comes
+      # from Vault via the programmingclub-db VaultStaticSecret in this namespace.
+      - name: pclub
+        ensure: present
+        login: true
+        superuser: false
+        createdb: false
+        createrole: false
+        passwordSecret:
+          name: programmingclub-db
   postgresql:
     pg_hba:
       - hostnossl all all all reject

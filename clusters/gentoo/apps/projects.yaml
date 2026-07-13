@@ -150,6 +150,9 @@ spec:
       kind: Secret
     - group: ""
       kind: Service
+    # programmingclub stores uploaded event/project images on a Longhorn volume.
+    - group: ""
+      kind: PersistentVolumeClaim
     - group: apps
       kind: Deployment
     - group: networking.k8s.io

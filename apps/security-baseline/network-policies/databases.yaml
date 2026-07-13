@@ -108,6 +108,15 @@ spec:
         - protocol: TCP
           port: 5432
 
+    # ProgrammingClub application database access
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: programmingclub
+      ports:
+        - protocol: TCP
+          port: 5432
+
     # CNPG replication between pods
     - from:
         - podSelector:

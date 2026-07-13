@@ -1,0 +1,14 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: pclub
+  namespace: databases
+spec:
+  cluster:
+    name: postgres-ha
+  name: pclub
+  owner: pclub
+  encoding: UTF8
+  # The database is dropped only if this resource is deleted AND reclaimPolicy is delete;
+  # `retain` keeps the data if the manifest ever goes away.
+  databaseReclaimPolicy: retain
