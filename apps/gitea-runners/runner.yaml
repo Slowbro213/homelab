@@ -64,7 +64,11 @@ spec:
               cpu: 100m
               memory: 256Mi
             limits:
-              memory: 768Mi
+              # Kaniko runs in host mode and snapshots the whole filesystem, so peak memory
+              # scales with the size of the image being built. 768Mi was enough for the small
+              # bun/nginx frontends but OOM-killed (137) the runner partway through the
+              # programmingclub image, which is a Debian/PHP base with composer + node_modules.
+              memory: 4Gi
 
           volumeMounts:
             - name: data
