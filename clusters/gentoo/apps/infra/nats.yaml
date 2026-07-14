@@ -1,0 +1,132 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nats
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+spec:
+  project: infra
+
+  sources:
+    - repoURL: https://nats-io.github.io/k8s/helm/charts/
+      chart: nats
+      targetRevision: 2.14.2
+      helm:
+        releaseName: nats
+        valuesObject:
+          config:
+            cluster:
+              enabled: false
+            jetstream:
+              enabled: false
+            nats:
+              tls:
+                enabled: true
+                secretName: nats-server-tls
+            monitor:
+              enabled: true
+            merge:
+              authorization:
+                token: << $NATS_AUTH_TOKEN >>
+          container:
+            env:
+              NATS_AUTH_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: nats-auth
+                    key: token
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+            merge:
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                privileged: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                seccompProfile:
+                  type: RuntimeDefault
+          reloader:
+            merge:
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 64Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                privileged: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                seccompProfile:
+                  type: RuntimeDefault
+          promExporter:
+            enabled: true
+            merge:
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 64Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                privileged: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                seccompProfile:
+                  type: RuntimeDefault
+            podMonitor:
+              enabled: true
+              merge:
+                metadata:
+                  labels:
+                    release: monitoring
+          podTemplate:
+            merge:
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                fsGroup: 1000
+                seccompProfile:
+                  type: RuntimeDefault
+          natsBox:
+            enabled: false
+          service:
+            ports:
+              leafnodes:
+                enabled: false
+              websocket:
+                enabled: false
+              mqtt:
+                enabled: false
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nats
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

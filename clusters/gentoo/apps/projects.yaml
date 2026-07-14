@@ -49,6 +49,7 @@ spec:
     - https://charts.goauthentik.io
     - https://dl.gitea.com/charts/
     - https://argoproj.github.io/argo-helm
+    - https://nats-io.github.io/k8s/helm/charts/
   destinations:
     - server: https://kubernetes.default.svc
       namespace: argocd
@@ -90,6 +91,8 @@ spec:
       namespace: gitea
     - server: https://kubernetes.default.svc
       namespace: gitea-runners
+    - server: https://kubernetes.default.svc
+      namespace: nats
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

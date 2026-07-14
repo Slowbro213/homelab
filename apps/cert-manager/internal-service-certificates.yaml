@@ -72,3 +72,31 @@ spec:
     name: gentoo-internal-ca
     kind: ClusterIssuer
     group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nats-server-tls
+  namespace: nats
+spec:
+  secretName: nats-server-tls
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  dnsNames:
+    - nats
+    - nats.nats
+    - nats.nats.svc
+    - nats.nats.svc.cluster.local
+    - nats-headless
+    - nats-headless.nats
+    - nats-headless.nats.svc
+    - nats-headless.nats.svc.cluster.local
+  issuerRef:
+    name: gentoo-internal-ca
+    kind: ClusterIssuer
+    group: cert-manager.io
