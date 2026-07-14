@@ -36,6 +36,13 @@ spec:
           enabled: false
 
         grafana:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+
           envValueFrom:
             LOKI_BASIC_AUTH_USERNAME:
               secretKeyRef:
