@@ -41,11 +41,11 @@ spec:
     storageClass: longhorn-rwo
   resources:
     requests:
-      cpu: "1"
+      cpu: 250m
       memory: 1Gi
     limits:
-      cpu: "4"
-      memory: 4Gi
+      cpu: "2"
+      memory: 2Gi
   backup:
     barmanObjectStore:
       destinationPath: s3://postgres-backups/ha-cluster/
