@@ -118,6 +118,15 @@ spec:
                 enabled: false
               mqtt:
                 enabled: false
+          statefulSet:
+            merge:
+              spec:
+                # k8s (1.27+) defaults this field on the live object even though the chart
+                # never sets it; pinning it to the same default here stops Argo CD from
+                # reporting permanent drift against the API-server-mutated object.
+                persistentVolumeClaimRetentionPolicy:
+                  whenDeleted: Retain
+                  whenScaled: Retain
 
   destination:
     server: https://kubernetes.default.svc
