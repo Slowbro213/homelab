@@ -31,7 +31,10 @@ spec:
 
       containers:
         - name: runner
-          image: registry.gentoo.lan/infra/gitea-runner-tools:0.2.11-1
+          # act_runner + buildah (kaniko removed). Kaniko in host mode unpacked each build's
+          # base image over the runner's own "/", wiping git/act_runner/crane/trivy mid-job;
+          # buildah builds into isolated container storage under /var/lib/containers instead.
+          image: registry.gentoo.lan/infra/gitea-runner-tools:0.3.0
           imagePullPolicy: IfNotPresent
 
           env:
@@ -45,11 +48,22 @@ spec:
               value: /data
             - name: XDG_CACHE_HOME
               value: /data/.cache
+            # buildah defaults for host-mode builds in an unprivileged (baseline PodSecurity)
+            # pod: chroot isolation avoids needing new user namespaces, vfs avoids needing
+            # /dev/fuse. The workflow sets these too; keeping them here makes manual invocations
+            # behave the same.
+            - name: BUILDAH_ISOLATION
+              value: chroot
+            - name: STORAGE_DRIVER
+              value: vfs
             - name: GITEA_RUNNER_REGISTRATION_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: gitea-runner-registration
                   key: token
+            # Label kept as "gitea-kaniko" (not renamed to buildah) so the existing
+            # `runs-on: gitea-kaniko` in the app workflows keeps matching; ":host" runs steps
+            # directly in this pod, which is required for buildah's container storage.
             - name: GITEA_RUNNER_LABELS
               value: gitea-kaniko:host
 
@@ -58,23 +72,31 @@ spec:
             runAsGroup: 0
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
+            # buildah needs to unshare a mount namespace for the build container; the default
+            # seccomp profile blocks the required syscalls (e.g. CLONE_NEWUSER/unshare) for a
+            # process without CAP_SYS_ADMIN. Baseline PodSecurity permits Unconfined seccomp
+            # (only the "restricted" level forbids it), so this overrides the pod default above.
+            seccompProfile:
+              type: Unconfined
 
           resources:
             requests:
               cpu: 100m
               memory: 256Mi
             limits:
-              # Kaniko runs in host mode and snapshots the whole filesystem, so peak memory
-              # scales with the size of the image being built. 768Mi was enough for the small
-              # bun/nginx frontends but OOM-killed (137) the runner partway through the
-              # programmingclub image, which is a Debian/PHP base with composer + node_modules.
+              # The programmingclub image is a Debian/PHP base with composer + node_modules;
+              # 4Gi was set when kaniko OOM-killed (137) on it, and buildah's build container
+              # plus the vfs copy-up are comparably heavy, so keep the headroom.
               memory: 4Gi
 
           volumeMounts:
             - name: data
               mountPath: /data
-            - name: kaniko-dir
-              mountPath: /kaniko
+            # buildah's container storage (graphroot). vfs makes a full copy per layer, so it is
+            # disk-hungry; an emptyDir keeps it off the container's writable layer and it is
+            # discarded with the pod.
+            - name: containers-storage
+              mountPath: /var/lib/containers
             - name: certs
               mountPath: /etc/ssl/certs/gentoo-ca.crt
               subPath: ca.crt
@@ -83,7 +105,7 @@ spec:
       volumes:
         - name: data
           emptyDir: {}
-        - name: kaniko-dir
+        - name: containers-storage
           emptyDir: {}
         - name: certs
           secret:

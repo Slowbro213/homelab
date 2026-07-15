@@ -124,6 +124,34 @@ spec:
                   names:
                     - gitea-runner
                     - gitea-runner-*
+          # The gitea-runner builds images with buildah in host mode. buildah must
+          # unshare(CLONE_NEWUSER) to build unprivileged, which every non-Unconfined seccomp
+          # profile blocks for a process without CAP_SYS_ADMIN. Custom Localhost profiles can't
+          # be installed via GitOps here (disallow-host-path blocks an installer DaemonSet), so
+          # the runner uses Unconfined seccomp; scope that exception to this pod only, matching
+          # the run-as-root / capabilities exceptions above.
+          restrict-seccomp:
+            any:
+              - resources:
+                  kinds:
+                    - Deployment
+                    - Pod
+                  namespaces:
+                    - gitea-runners
+                  names:
+                    - gitea-runner
+                    - gitea-runner-*
+          restrict-seccomp-strict:
+            any:
+              - resources:
+                  kinds:
+                    - Deployment
+                    - Pod
+                  namespaces:
+                    - gitea-runners
+                  names:
+                    - gitea-runner
+                    - gitea-runner-*
         background: true
 
   syncPolicy:
