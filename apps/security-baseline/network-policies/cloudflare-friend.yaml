@@ -1,0 +1,99 @@
+# ============================================================
+# Namespace: cloudflare-friend
+# Second cloudflared connector, tunnels a friend's own Cloudflare
+# account/domain into this cluster. Separate namespace/credentials
+# from the `cloudflare` tunnel since it belongs to a different account.
+# ============================================================
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cloudflare-friend-default-deny
+  namespace: cloudflare-friend
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cloudflare-friend-allow-dns
+  namespace: cloudflare-friend
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cloudflare-friend-allow-tunnel-egress
+  namespace: cloudflare-friend
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cloudflared-friend
+  policyTypes:
+    - Egress
+  egress:
+    # Cloudflare Tunnel transport. Cloudflare documents 7844 TCP/UDP for http2/quic.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 7844
+        - protocol: UDP
+          port: 7844
+
+    # Allow fallback/control-plane HTTPS.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cloudflare-friend-allow-egress-to-traefik
+  namespace: cloudflare-friend
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cloudflared-friend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 8443

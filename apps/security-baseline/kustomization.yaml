@@ -21,6 +21,7 @@ resources:
   - network-policies/gitea-runners.yaml
   - network-policies/authentik.yaml
   - network-policies/cloudflare.yaml
+  - network-policies/cloudflare-friend.yaml
   - resource-limits/cntdwn.yaml
   - resource-limits/programmingclub.yaml
   - resource-limits/whoami.yaml

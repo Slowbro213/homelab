@@ -88,6 +88,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: cloudflare
     - server: https://kubernetes.default.svc
+      namespace: cloudflare-friend
+    - server: https://kubernetes.default.svc
       namespace: gitea
     - server: https://kubernetes.default.svc
       namespace: gitea-runners
