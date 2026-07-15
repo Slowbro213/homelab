@@ -25,6 +25,12 @@ spec:
           hostnames:
             - git.gentoo.lan
 
+      # Pinned to the node that carries the Localhost seccomp profile referenced below
+      # (/var/lib/kubelet/seccomp/gitea-runner-buildah.json). The profile is a node-local file
+      # and only this node has it, so the runner must land here for buildah to start.
+      nodeSelector:
+        kubernetes.io/hostname: registry.gentoo.lan
+
       securityContext:
         seccompProfile:
           type: RuntimeDefault
@@ -72,12 +78,15 @@ spec:
             runAsGroup: 0
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
-            # buildah needs to unshare a mount namespace for the build container; the default
-            # seccomp profile blocks the required syscalls (e.g. CLONE_NEWUSER/unshare) for a
-            # process without CAP_SYS_ADMIN. Baseline PodSecurity permits Unconfined seccomp
-            # (only the "restricted" level forbids it), so this overrides the pod default above.
+            # buildah must unshare(CLONE_NEWUSER) to build unprivileged, which RuntimeDefault
+            # blocks without CAP_SYS_ADMIN. Unconfined is not an option: PodSecurity "baseline"
+            # (and Kyverno restrict-seccomp) both forbid it. A Localhost profile is allowed by
+            # both and opens exactly the namespace/mount syscalls buildah needs while still
+            # denying kexec/module-load/bpf/etc. The profile is installed on the pinned node at
+            # /var/lib/kubelet/seccomp/gitea-runner-buildah.json.
             seccompProfile:
-              type: Unconfined
+              type: Localhost
+              localhostProfile: gitea-runner-buildah.json
 
           resources:
             requests:
