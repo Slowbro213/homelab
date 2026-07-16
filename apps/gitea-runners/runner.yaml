@@ -71,7 +71,7 @@ spec:
             # `runs-on: gitea-kaniko` in the app workflows keeps matching; ":host" runs steps
             # directly in this pod, which is required for buildah's container storage.
             - name: GITEA_RUNNER_LABELS
-              value: gitea-kaniko:host
+              value: gitea-buildah:host
 
           securityContext:
             runAsUser: 0
@@ -93,9 +93,12 @@ spec:
               cpu: 100m
               memory: 256Mi
             limits:
-              # The programmingclub image is a Debian/PHP base with composer + node_modules;
-              # 4Gi was set when kaniko OOM-killed (137) on it, and buildah's build container
-              # plus the vfs copy-up are comparably heavy, so keep the headroom.
+              # buildah (vfs storage driver, chroot isolation) builds into its own container
+              # storage under /var/lib/containers/storage in the runner's writable layer, so
+              # peak memory still scales with the size of the image being built. 768Mi was
+              # enough for the small bun/nginx frontends but OOM-killed (137) the runner
+              # partway through the programmingclub image, which is a Debian/PHP base with
+              # composer + node_modules.
               memory: 4Gi
 
           volumeMounts:
