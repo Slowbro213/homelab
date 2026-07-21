@@ -29,13 +29,17 @@ spec:
             defaultReplicaCount: 2
             storageMinimalAvailablePercentage: 15
             storageOverProvisioningPercentage: 100
-            # Backup target = throwaway MinIO on the workstation, reached over
-            # tailscale. The endpoint + keys live in the operator-applied Secret
-            # longhorn-backup-credential (NOT in git / Vault, so restores work
-            # while Vault is sealed). Volume data (the PVC contents) uploads here
-            # via the CSI "type: bak" VolumeSnapshotClass.
+          # Backup target = throwaway MinIO on the workstation, reached over
+          # tailscale. The endpoint + keys live in the operator-applied Secret
+          # longhorn-backup-credential (NOT in git / Vault, so restores work while
+          # Vault is sealed). Longhorn v1.11 configures the backup target via the
+          # chart's defaultBackupStore (populates the "default" BackupTarget CR) —
+          # defaultSettings.backupTarget no longer applies. Volume data (the PVC
+          # contents) uploads here via the CSI "type: bak" VolumeSnapshotClass.
+          defaultBackupStore:
             backupTarget: s3://longhorn-backups@minio-default/
             backupTargetCredentialSecret: longhorn-backup-credential
+            pollInterval: 300
           ingress:
             enabled: false
           longhornUI:

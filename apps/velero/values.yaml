@@ -6,10 +6,19 @@ image:
   repository: velero/velero
 
 # S3 plugin for the MinIO-backed BackupStorageLocation (object metadata).
+# The initContainer runs restricted too (this cluster enforces the full Kyverno
+# restricted PSS pack: seccomp, run-as-nonroot, drop-all-caps, no priv-esc).
 initContainers:
   - name: velero-plugin-for-aws
     image: velero/velero-plugin-for-aws:v1.11.1
     imagePullPolicy: IfNotPresent
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
     volumeMounts:
       - mountPath: /target
         name: plugins
@@ -17,6 +26,27 @@ initContainers:
 # Server-only: no per-node file mover.
 deployNodeAgent: false
 snapshotsEnabled: true
+
+# Do NOT run the chart's velero-upgrade-crds hook Job: its pod/initContainer
+# security context is not configurable and gets denied by the restricted Kyverno
+# policies. Argo CD applies the chart's 13 CRDs directly (it includes crds/ by
+# default) and re-applies them on every sync, so the upgrade Job is unnecessary.
+upgradeCRDs: false
+
+# Restricted-PSS compliant contexts (required cluster-wide by Kyverno).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
 
 configuration:
   # Built-in CSI support (Velero >=1.14); no separate CSI plugin image needed.
