@@ -169,7 +169,7 @@ resources:
 
 - [ ] **Step 3: Write `clusters/gentoo/apps/infra/snapshot-controller.yaml`**
 
-Sync-wave `-6` puts it before Longhorn (`-5`) so the CRDs exist before any volume snapshotting.
+Sync-wave `-6` sequences these CRDs **before Velero (`-4`), their first consumer**. (The live waves are cert-manager `-20`, longhorn `-15`, snapshot-controller `-6`, minio `-5`, velero `-4`. Longhorn creates no `VolumeSnapshot` objects at install, so ordering vs Longhorn is irrelevant — only "CRDs before Velero" matters, and `-6 < -4` satisfies it.)
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -224,13 +224,14 @@ Expected: three `volumesnapshot*.snapshot.storage.k8s.io` CRDs and `snapshot-con
 Routes CSI snapshots through Longhorn's **backup store** (not local-only snapshots).
 
 **Files:**
-- Create: `apps/velero/volumesnapshotclass.yaml`
+- Create: `apps/snapshot-controller/volumesnapshotclass.yaml` (co-located with the CRDs/controller so the existing `snapshot-controller` Application applies it — the class needs those CRDs registered first, and no Application applies loose files under `apps/velero/`)
+- Modify: `apps/snapshot-controller/kustomization.yaml` (add the class to `resources:`)
 - Create: `apps/velero/values.yaml` (used by Task 7)
 
 **Interfaces:**
-- Produces: a `VolumeSnapshotClass` named `longhorn-backup` with `driver: driver.longhorn.io`, `parameters.type: bak`. Task 7's Velero backup references this class; Task 11 uses it.
+- Produces: a `VolumeSnapshotClass` named `longhorn-backup` with `driver: driver.longhorn.io`, `parameters.type: bak`, synced by the `snapshot-controller` Application (sync-wave `-6`, before Velero at `-4`). Task 7's Velero backup references this class by its `velero.io/csi-volumesnapshot-class` label; Task 11 uses it.
 
-- [ ] **Step 1: Write `apps/velero/volumesnapshotclass.yaml`**
+- [ ] **Step 1: Write `apps/snapshot-controller/volumesnapshotclass.yaml`**
 
 ```yaml
 apiVersion: snapshot.storage.k8s.io/v1
@@ -245,6 +246,14 @@ parameters:
   # "bak" makes the CSI snapshot create a Longhorn *backup* in the configured
   # backupTarget (the PC MinIO), which is what survives a full node wipe.
   type: bak
+```
+
+- [ ] **Step 1b: Add it to `apps/snapshot-controller/kustomization.yaml`**
+
+Append to the existing `resources:` list (after the five CRD/controller entries):
+
+```yaml
+  - volumesnapshotclass.yaml
 ```
 
 - [ ] **Step 2: Write `apps/velero/values.yaml`** (Velero Helm values — server-only, CSI on, node-agent off)
@@ -300,16 +309,16 @@ schedules: {}
 - [ ] **Step 3: Validate YAML**
 
 ```bash
-for f in apps/velero/volumesnapshotclass.yaml apps/velero/values.yaml; do
+for f in apps/snapshot-controller/volumesnapshotclass.yaml apps/snapshot-controller/kustomization.yaml apps/velero/values.yaml; do
   python3 -c "import yaml,sys; list(yaml.safe_load_all(open(sys.argv[1])))" "$f"; done
 echo VALID
 ```
-Expected: `VALID`.
+Expected: `VALID`. (In this environment `python3` lacks `yaml`; use `nix-shell -p python3Packages.pyyaml --run "python3 -c \"import yaml; list(yaml.safe_load_all(open('<FILE>')))\""` per file instead.)
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add apps/velero/volumesnapshotclass.yaml apps/velero/values.yaml
+git add apps/snapshot-controller/volumesnapshotclass.yaml apps/snapshot-controller/kustomization.yaml apps/velero/values.yaml
 git commit -m "velero: add longhorn-backup VolumeSnapshotClass and helm values"
 ```
 
@@ -534,7 +543,7 @@ rm -f /tmp/velero-creds
 
 - [ ] **Step 2: Write `clusters/gentoo/apps/infra/velero.yaml`**
 
-Sync-wave `-4` = after Longhorn (`-5`) so the CSI driver + backupTarget exist first.
+Sync-wave `-4` = after longhorn (`-15`), snapshot-controller (`-6`), and minio (`-5`) so the Longhorn CSI driver, the snapshot CRDs/`VolumeSnapshotClass`, and the backup target all exist first.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
