@@ -1,0 +1,23 @@
+{ config, ... }:
+let
+  node = config.homelab.node;
+in
+{
+  services.k3s = {
+    enable = true;
+    role = "server";
+    tokenFile = config.sops.secrets."k3s/token".path;
+    extraFlags = [
+      "--flannel-backend=host-gw"
+      "--node-name=cachyos"
+      "--node-ip=${node.ipv4}"
+      "--flannel-iface=${node.wifiInterface}"  # pin flannel to WiFi (not tailscale0/wwan)
+      "--tls-san=192.168.1.31"
+      "--tls-san=k3s.gentoo.lan"
+      "--write-kubeconfig-mode=0644"
+    ];
+  };
+
+  # API server, kubelet metrics, and servicelb/traefik ingress (live on both nodes today).
+  networking.firewall.allowedTCPPorts = [ 6443 10250 80 443 ];
+}

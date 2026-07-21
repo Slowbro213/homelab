@@ -1,0 +1,36 @@
+{
+  "defaultAction": "SCMP_ACT_ALLOW",
+  "comment": "Localhost profile for the gitea buildah runner: allows the user-namespace/mount syscalls buildah needs to build unprivileged (which RuntimeDefault blocks), while still denying the classically-dangerous kernel-facing syscalls. More restrictive than Unconfined.",
+  "syscalls": [
+    {
+      "names": [
+        "kexec_load",
+        "kexec_file_load",
+        "init_module",
+        "finit_module",
+        "delete_module",
+        "reboot",
+        "swapon",
+        "swapoff",
+        "acct",
+        "settimeofday",
+        "clock_settime",
+        "clock_adjtime",
+        "adjtimex",
+        "nfsservctl",
+        "quotactl",
+        "bpf",
+        "perf_event_open",
+        "_sysctl",
+        "get_kernel_syms",
+        "query_module",
+        "sysfs",
+        "vm86",
+        "vm86old",
+        "userfaultfd"
+      ],
+      "action": "SCMP_ACT_ERRNO",
+      "errnoRet": 1
+    }
+  ]
+}

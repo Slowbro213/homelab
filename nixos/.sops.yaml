@@ -1,0 +1,14 @@
+keys:
+  - &ws age12lk6x3ugvxxmst4dvtpfc6mwjazr6ayrth000rtfe9uc4lyrjduqx62tfs
+  - &cachyos age1fwvlecr7mu6a2f5vllv05wpscgq0cqdpk08fdea6yfuuu8wsmvqslf4pya
+  - &tux age1kls88w76azedd3n0yx9ns6d4mapc5fdq590ryntd0wskys6lvgls2pnp5g
+creation_rules:
+  - path_regex: secrets/cluster\.yaml$
+    key_groups:
+      - age: [*ws, *cachyos, *tux]
+  - path_regex: secrets/hosts/cachyos\.yaml$
+    key_groups:
+      - age: [*ws, *cachyos]
+  - path_regex: secrets/hosts/tux\.yaml$
+    key_groups:
+      - age: [*ws, *tux]

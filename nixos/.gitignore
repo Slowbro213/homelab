@@ -1,0 +1,5 @@
+# never commit decrypted secrets or private keys
+secrets/**/*.dec
+keys/*_ed25519_key
+# per-host public host keys are recipients-only (already encoded in .sops.yaml)
+keys/*_ssh_host_ed25519_key.pub
