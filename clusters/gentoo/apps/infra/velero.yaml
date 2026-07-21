@@ -10,14 +10,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "-4"
 spec:
   project: infra
-  source:
-    repoURL: https://vmware-tanzu.github.io/helm-charts
-    chart: velero
-    targetRevision: 8.7.2
-    helm:
-      releaseName: velero
-      valueFiles:
-        - $values/apps/velero/values.yaml
   sources:
     - repoURL: https://vmware-tanzu.github.io/helm-charts
       chart: velero
