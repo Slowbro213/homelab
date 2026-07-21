@@ -2,6 +2,25 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+## ⏱️ Execution status (updated 2026-07-21) — RESUME AT PART B
+
+**Part A (Tasks 1–8, the backup capability): ✅ COMPLETE, deployed to `main`, verified green on the live cluster.**
+Proof-backup of the `redis` namespace landed real data in both MinIO buckets; final review clean (no Critical/Important). Live state: Velero `1/1 Running`, BackupStorageLocation `Available`, `VolumeSnapshotClass longhorn-backup` present, Longhorn backup target `available: true`. Commits: `0e29d27` → `b9ef833`.
+
+**Parts B–D (Tasks 9–18, the outage runbook): ⏳ NOT STARTED — user-driven, irreversible.** Resume here. Needs the user present, their externally-stored Vault unseal keys, and the physical NixOS installs. Do NOT auto-run.
+
+**How the live implementation diverged from the task text below (reconcile before executing):**
+- **Backup endpoint is the workstation's TAILSCALE IP `http://100.67.45.100:9000`**, not a LAN IP — LAN 9000 is firewalled; tailscale is trusted and reachable from both nodes + pods (proven). All manifests already use this.
+- **MinIO** is a podman container `migration-minio` on the workstation (data in `~/migration-minio/data`) with **no restart policy** — re-run it after a reboot. Creds are not in git but recoverable from the cluster Secrets `velero/velero-minio-credentials` and `longhorn-system/longhorn-backup-credential`, or `podman inspect migration-minio`.
+- **Velero** uses `upgradeCRDs: false` + full restricted-PSS security contexts (the cluster enforces the whole Kyverno restricted pack; the chart's `velero-upgrade-crds` Job is un-securable). Argo applies Velero's 13 CRDs itself.
+- **Longhorn** backup target is set via the chart's `defaultBackupStore` key (v1.11 ignores `defaultSettings.backupTarget`).
+- **VolumeSnapshotClass** `longhorn-backup` lives in `apps/snapshot-controller/` (wired into that kustomization), not `apps/velero/`.
+- The two operator-applied credential Secrets already exist on the cluster; for the real backup/restore they must be re-applied if the cluster is rebuilt (Task 14 covers this).
+
+Detailed per-task ledger (git-ignored, on-disk): `.superpowers/sdd/progress.md`.
+
+---
+
 **Goal:** Back up all persistent cluster state to a throwaway MinIO on the main PC, wipe both nodes to NixOS, then rebuild the cluster from git + restore the data — losing nothing.
 
 **Architecture:** Velero captures Kubernetes object metadata (PVCs/PVs/namespaces) into one MinIO bucket; Longhorn's CSI snapshot integration (`VolumeSnapshotClass` with `type: bak`) uploads the actual volume data to Longhorn's own backup target in a second MinIO bucket. Velero runs **server-only (no privileged node-agent/datamover)** because volume data travels via Longhorn, not via Velero's file-mover. Backup capability is added declaratively as Argo CD `Application`s; the backup/restore *executions* are operator runbook commands. Restore is scoped to `pvc,pv,namespaces` only — all Deployments/StatefulSets/Services come back from git via Argo CD.
