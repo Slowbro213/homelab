@@ -28,10 +28,27 @@ deploys) is unaffected by this.
 
 ## Remote install (destructive — migration window only)
 
-⚠️ Both nodes are WiFi-only. `nixos-anywhere`'s kexec installer can drop the WiFi link
-mid-install. Do the install with a **temporary USB-ethernet dongle** on the node (both nodes
-are down together during the migration), then reconnect WiFi via the deployed config. This is
-the recommended path. (Alternative: build a per-node installer ISO with WiFi baked in.)
+⚠️ Both nodes are WiFi-only. `nixos-anywhere`'s default kexec installer only brings up
+ethernet (DHCP) — it has no WiFi driver/firmware or WPA credentials baked in, so the SSH
+session it relies on will drop the moment it kexecs unless the installer image itself is
+built with the node's WiFi stack included. **Decision (user-approved): install over WiFi,
+no ethernet dongle.** This requires building a custom kexec installer image per host via
+`nixos-anywhere --kexec <path>` (see `nixos-anywhere`'s `docs/howtos/custom-kexec.md`),
+combining `nixos-images`' `kexec-installer` module with:
+- the host's WiFi driver/firmware (cachyos: `rtw88_8822ce`/`rtw88_8822c`/`rtw88_pci`
+  (Realtek RTL8822CE); tux: `iwlwifi`/`iwlmvm` (Intel Wireless 8260)) in
+  `boot.initrd.availableKernelModules`, plus `hardware.enableRedistributableFirmware`
+- `networking.wireless` configured with the live SSID/PSK (this is a throwaway, uncommitted
+  installer artifact — never persisted to the final installed system — so supplying the PSK
+  in cleartext at build time, e.g. via an env var, is acceptable here, unlike everywhere else
+  in this repo)
+
+This installer-image work is not yet implemented — flagged as a TODO before the first
+install is actually run. Also note: root SSH login is **not currently enabled** on either
+node's live OS (`root@cachyos-x8664`/`root@tux` both reject the deploy key today), and
+`nixos-anywhere --target-host` needs root — so a prerequisite immediately before running it
+is to temporarily authorize the deploy key for `root` (or flip `PermitRootLogin`) on the
+soon-to-be-wiped current OS.
 
 Only run this AFTER the migration backup phase (Velero + Vault snapshot) is complete.
 

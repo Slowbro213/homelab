@@ -229,10 +229,12 @@ nix run github:nix-community/nixos-anywhere -- \
   --flake .#<host> --target-host root@<ip>
 ```
 ⚠️ **WiFi-only install is the one sharp edge.** `nixos-anywhere`'s kexec installer can drop the
-WiFi link mid-install. Since the migration wipes both nodes together (full outage), do the
-install with a **temporary USB-ethernet dongle**, *or* build a per-node installer ISO from the
-flake with WiFi creds baked in. The README documents both; this is the primary operational
-risk.
+WiFi link mid-install (its default installer has no WiFi driver/firmware or WPA creds baked
+in). **Decision: user is fine installing over WiFi** — no ethernet dongle requirement. This
+means the install needs a custom per-host kexec installer image (via `nixos-anywhere --kexec`)
+built from the `nixos-images` kexec-installer module plus the node's WiFi
+driver/firmware/credentials; see `nixos/README.md` for the mechanism and status (not yet
+implemented — flagged as a TODO before the first real install).
 
 ### Remote deploy (per host)
 ```
@@ -248,8 +250,8 @@ After both nodes are installed and k3s is up, Phase 4 of
 let infra sync in sync-wave order → re-add Velero → `velero restore` PVCs → unseal Vault.
 
 ## Risks / callouts
-1. **WiFi-only install** — needs a USB-ethernet dongle or a custom installer ISO. Most fiddly
-   step.
+1. **WiFi-only install** — user approved installing over WiFi (no ethernet dongle); needs a
+   custom kexec installer image with WiFi baked in. Most fiddly step.
 2. **Single control-plane on sqlite, over WiFi** — no HA, unchanged from today. Future HA means
    `--cluster-init` + embedded etcd + additional server nodes, which adds firewall
    `2379-2380/tcp` and changes the token/join model. `mkNode` leaves room; out of scope now.
@@ -264,5 +266,5 @@ let infra sync in sync-wave order → re-add Velero → `velero restore` PVCs �
   the WiFi SSID/PSK and a fresh k3s token.
 - Produce per-node `hardware.nix` (via `nixos-generate-config` during the `nixos-anywhere` run)
   and confirm the WiFi iface names post-install.
-- Decide the WiFi install mechanism concretely (dongle vs baked ISO) and write the exact
-  per-host commands into `nixos/README.md`.
+- WiFi install mechanism is decided (over WiFi, no dongle); build the per-host custom kexec
+  installer image and write the exact commands into `nixos/README.md`.
