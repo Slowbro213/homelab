@@ -1,0 +1,13 @@
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: longhorn-backup
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: driver.longhorn.io
+deletionPolicy: Retain
+parameters:
+  # "bak" makes the CSI snapshot create a Longhorn *backup* in the configured
+  # backupTarget (the throwaway PC MinIO, reached over tailscale), which is what
+  # survives a full node wipe. "snap" would be a local-only snapshot.
+  type: bak

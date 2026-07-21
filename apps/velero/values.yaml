@@ -1,0 +1,55 @@
+# vmware-tanzu/velero Helm values. Volume data moves via Longhorn's backupTarget
+# (Longhorn uploads the actual PVC data to its own S3 backup store), so Velero
+# needs NO node-agent/datamover — only its controller + the built-in CSI feature.
+# Velero here stores only the Kubernetes object metadata in its own MinIO bucket.
+image:
+  repository: velero/velero
+
+# S3 plugin for the MinIO-backed BackupStorageLocation (object metadata).
+initContainers:
+  - name: velero-plugin-for-aws
+    image: velero/velero-plugin-for-aws:v1.11.1
+    imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+# Server-only: no per-node file mover.
+deployNodeAgent: false
+snapshotsEnabled: true
+
+configuration:
+  # Built-in CSI support (Velero >=1.14); no separate CSI plugin image needed.
+  features: EnableCSI
+  backupStorageLocation:
+    - name: default
+      provider: aws
+      bucket: velero-metadata
+      default: true
+      config:
+        region: minio-default
+        s3ForcePathStyle: "true"
+        # Throwaway MinIO on the workstation, reached over tailscale (LAN 9000 is
+        # firewalled; the tailscale interface is trusted). Endpoint is disposable.
+        s3Url: http://100.67.45.100:9000
+  volumeSnapshotLocation:
+    - name: default
+      provider: aws
+      config:
+        region: minio-default
+
+credentials:
+  useSecret: true
+  # Operator-applied Secret (NOT from Vault): Vault is sealed during a restore,
+  # so Velero's object-store creds must be Vault-independent. See infra/velero.yaml.
+  existingSecret: velero-minio-credentials
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+# No scheduled backups yet; the Schedule is added in Task 18 after restore is proven.
+schedules: {}
