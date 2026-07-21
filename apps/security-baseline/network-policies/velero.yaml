@@ -1,0 +1,55 @@
+# ============================================================
+# Namespace: velero
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: velero
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-velero-egress
+  namespace: velero
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # kube-apiserver: k3s serves it on the node IP:6443 and the in-cluster
+    # ClusterIP on 443. Velero talks to the API constantly.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 6443
+        - protocol: TCP
+          port: 443
+    # Throwaway MinIO on the workstation, reached over tailscale (100.67.45.100).
+    # Velero uploads backup object metadata here.
+    - to:
+        - ipBlock:
+            cidr: 100.67.45.100/32
+      ports:
+        - protocol: TCP
+          port: 9000

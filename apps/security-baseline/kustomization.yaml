@@ -22,6 +22,8 @@ resources:
   - network-policies/authentik.yaml
   - network-policies/cloudflare.yaml
   - network-policies/cloudflare-friend.yaml
+  - network-policies/velero.yaml
   - resource-limits/cntdwn.yaml
   - resource-limits/programmingclub.yaml
   - resource-limits/whoami.yaml
+  - resource-limits/velero.yaml
