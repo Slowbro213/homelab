@@ -136,15 +136,37 @@ wired up as a real, ongoing scheduled-backup capability (via a Velero `Schedule`
 resource) rather than a one-time migration tool to be torn down afterward — a net
 improvement to the cluster's resilience beyond just enabling this migration.
 
-## Open items for the implementation plan
+## Resolved facts (gathered from the live cluster, 2026-07-21)
 
-- Exact Velero + Longhorn CSI snapshot integration setup (chart/plugin versions,
-  `VolumeSnapshotClass` parameters needed to route CSI snapshots through Longhorn's
-  backup store rather than local-only snapshots) needs to be pinned against the
-  Longhorn/Kubernetes versions actually running at implementation time.
-- A concrete mapping of namespace → workload → PVC(s) to scale down in Phase 2, step 2
-  (currently identified at the app level; needs the precise Deployment/StatefulSet
-  names before execution).
-- How Argo CD itself gets bootstrapped fresh in Phase 4 step 1 (exact commands) —
-  depends on how it was originally installed, which isn't captured in this repo's
-  history.
+- **Versions:** Longhorn `v1.11.1`; k8s `v1.36.0+k3s` on the control-plane (`cachyos`),
+  `v1.35.5+k3s1` on the agent (`registry.gentoo.lan`). Pin Velero/plugin versions and
+  the `VolumeSnapshotClass` against these.
+- **Snapshot-CRD gap (must be fixed first):** the upstream external-snapshotter CRDs
+  (`volumesnapshots.snapshot.storage.k8s.io`, `volumesnapshotcontents…`,
+  `volumesnapshotclasses…`) and the snapshot-controller are **not installed** — only
+  `snapshots.longhorn.io` (Longhorn-internal) and `etcdsnapshotfiles.k3s.cattle.io`
+  exist. Longhorn's `csi-snapshotter` sidecar is running, but Velero's CSI integration
+  needs the upstream CRDs + a Longhorn `VolumeSnapshotClass` with `type: bak` to route
+  snapshots through the backup target. Phase 2 step 1 must install these before the
+  first backup.
+- **PVC → workload map to quiesce (14 PVCs, Phase 2 step 2):**
+  - `databases`: `postgres-ha-1/2/3` — CNPG `Cluster/postgres-ha` (3 instances); quiesce
+    via CNPG hibernate, not raw scale.
+  - `vault`: `data-vault-0/1`, `audit-vault-0/1` — StatefulSet `vault` (2 replicas).
+  - `gitea`: `gitea-shared-storage` — Deployment `gitea`.
+  - `minio`: `minio` — Deployment `minio`.
+  - `logging`: `storage-loki-0` — StatefulSet `loki`.
+  - `monitoring`: `prometheus-…-prometheus-0`, `alertmanager-…-alertmanager-0` —
+    StatefulSets.
+  - `redis`: `redis-data-redis-master-0` — StatefulSet `redis-master`.
+  - `programmingclub`: `programmingclub-uploads` — app Deployment (source in its own repo).
+- **Argo CD bootstrap (Phase 4 step 1):** apply the pinned upstream Argo CD install
+  manifest (`kubectl apply -n argocd -f <pinned install.yaml>`), then apply
+  `clusters/gentoo/root-app.yaml`. (Argo CD's own install config is not tracked in this
+  repo; accepted.)
+
+## Still open for the implementation plan
+
+- Exact pinned versions of the external-snapshotter CRDs/controller, Velero chart +
+  Longhorn/CSI plugin, and the specific Argo CD `install.yaml` release tag — pin at
+  implementation time against the versions above.
