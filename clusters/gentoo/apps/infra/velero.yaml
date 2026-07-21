@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero
+  namespace: argocd
+  annotations:
+    # After longhorn (-15), snapshot-controller (-6), and minio (-5) so the
+    # Longhorn CSI driver, the VolumeSnapshot CRDs/VolumeSnapshotClass, and the
+    # backup target all exist before Velero starts.
+    argocd.argoproj.io/sync-wave: "-4"
+spec:
+  project: infra
+  source:
+    repoURL: https://vmware-tanzu.github.io/helm-charts
+    chart: velero
+    targetRevision: 8.7.2
+    helm:
+      releaseName: velero
+      valueFiles:
+        - $values/apps/velero/values.yaml
+  sources:
+    - repoURL: https://vmware-tanzu.github.io/helm-charts
+      chart: velero
+      targetRevision: 8.7.2
+      helm:
+        releaseName: velero
+        valueFiles:
+          - $values/apps/velero/values.yaml
+    - repoURL: https://github.com/Slowbro213/homelab.git
+      targetRevision: HEAD
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # The velero namespace is created declaratively in security-baseline, so
+      # do not have this Application create it (keeps PSS labels authoritative).
+      - CreateNamespace=false
