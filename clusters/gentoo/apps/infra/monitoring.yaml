@@ -89,6 +89,11 @@ spec:
         prometheusOperator:
           admissionWebhooks:
             enabled: false
+          # With admissionWebhooks disabled there is no cert-gen job, so the
+          # operator must not try to serve its endpoint over TLS (it would mount
+          # a non-existent `*-admission` secret and never start).
+          tls:
+            enabled: false
 
         prometheus-node-exporter:
           securityContext:
