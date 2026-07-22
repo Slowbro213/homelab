@@ -9,11 +9,11 @@
   sops.secrets."wifi/env" = { };
   sops.secrets."slowking/hashed-password" = { neededForUsers = true; };
 
-  # Host key also sealed per-host so `nixos-rebuild switch` can restore it if lost.
-  sops.secrets."ssh_host_ed25519_key" = {
-    sopsFile = ../secrets/hosts/${config.networking.hostName}.yaml;
-    path = "/etc/ssh/ssh_host_ed25519_key";
-    mode = "0600";
-    neededForUsers = false;
-  };
+  # NOTE: The machine's SSH host key at /etc/ssh/ssh_host_ed25519_key IS the age
+  # identity sops uses to decrypt (sops.age.sshKeyPaths above). It is delivered as a
+  # real file at install time via nixos-anywhere --extra-files and persists on the XFS
+  # root across reboots/rebuilds. It must NOT be managed as a sops secret: doing so
+  # replaces the real key with a symlink into /run/secrets, which is only populated by
+  # decrypting *with that key* — a circular dependency that makes every secret
+  # (slowking password, wifi PSK, k3s token) fail to decrypt on boot.
 }

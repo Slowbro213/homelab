@@ -10,6 +10,10 @@ in
 
   config = {
     networking.useDHCP = false;
+    # The LAN/WiFi provides no working IPv6 route; without this, containerd
+    # resolves registries (e.g. docker.io) to AAAA records and image pulls fail
+    # with "network is unreachable". Force IPv4-only.
+    networking.enableIPv6 = false;
     networking.wireless = {
       enable = true;
       interfaces = [ cfg.wifiInterface ];

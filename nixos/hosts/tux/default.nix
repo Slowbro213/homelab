@@ -11,5 +11,9 @@
     ipv4 = "192.168.1.25";
   };
 
+  # tux is a laptop too — a closed lid must not suspend the cluster node.
+  services.logind.lidSwitch = "ignore";
+  services.logind.lidSwitchExternalPower = "ignore";
+
   system.stateVersion = "25.11";
 }

@@ -47,7 +47,7 @@ in
   }];
 
   environment.systemPackages = with pkgs; [
-    git vim htop tmux iproute2 iptables ethtool pciutils usbutils
+    git vim htop btop tmux iproute2 iptables ethtool pciutils usbutils
     dnsutils curl jq
   ];
 }

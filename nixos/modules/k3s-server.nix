@@ -15,6 +15,10 @@ in
       "--tls-san=192.168.1.31"
       "--tls-san=k3s.gentoo.lan"
       "--write-kubeconfig-mode=0644"
+      # Longhorn only auto-creates its default disk on nodes carrying this label
+      # (create-default-disk-labeled-nodes=true). Without it the node reports 0
+      # storage and no PVC can schedule.
+      "--node-label=node.longhorn.io/create-default-disk=true"
     ];
   };
 

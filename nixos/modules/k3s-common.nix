@@ -19,6 +19,17 @@
   # regenerated hardware.nix ever drops the not-detected.nix default.
   hardware.enableRedistributableFirmware = true;
 
+  # Longhorn's node environment check runs `nsenter --mount=<host-ns> iscsiadm`,
+  # which resolves `iscsiadm` via the host PATH (/usr/local/bin, /usr/sbin, ...).
+  # NixOS keeps it in /run/current-system/sw/bin, so symlink it into standard
+  # locations or Longhorn fails with "iscsiadm: No such file or directory".
+  systemd.tmpfiles.rules = [
+    "d /usr/local/bin 0755 root root - -"
+    "d /usr/local/sbin 0755 root root - -"
+    "L+ /usr/local/bin/iscsiadm  - - - - /run/current-system/sw/bin/iscsiadm"
+    "L+ /usr/local/sbin/iscsiadm - - - - /run/current-system/sw/bin/iscsiadm"
+  ];
+
   environment.etc."rancher/k3s/registries.yaml".source = ../assets/registries.yaml;
   environment.etc."rancher/k3s/certs/gentoo-internal-ca.crt".source =
     ../assets/gentoo-internal-ca.crt;

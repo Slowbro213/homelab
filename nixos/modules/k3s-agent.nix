@@ -17,6 +17,10 @@ in
       # apps/gitea-runners/runner.yaml, which pins the buildah runner to
       # kubernetes.io/hostname: registry.gentoo.lan.
       "--node-name=registry.gentoo.lan"
+      # Longhorn only auto-creates its default disk on nodes carrying this label
+      # (create-default-disk-labeled-nodes=true). Without it the node reports 0
+      # storage and no PVC can schedule.
+      "--node-label=node.longhorn.io/create-default-disk=true"
     ];
   };
 

@@ -10,6 +10,13 @@
 
   # cgroup v2 unified is the systemd/NixOS default — no action needed.
 
+  # Maximum performance: pin the CPU frequency governor to "performance" (never
+  # balanced/powersave), and make sure no power-profile daemon overrides it.
+  powerManagement.enable = true;
+  powerManagement.cpuFreqGovernor = "performance";
+  services.power-profiles-daemon.enable = lib.mkForce false;
+  services.tlp.enable = lib.mkForce false;
+
   zramSwap = {
     enable = true;
     algorithm = "zstd";
