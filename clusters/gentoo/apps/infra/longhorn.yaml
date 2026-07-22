@@ -28,7 +28,12 @@ spec:
             defaultDataPath: /var/lib/longhorn
             defaultReplicaCount: 2
             storageMinimalAvailablePercentage: 15
-            storageOverProvisioningPercentage: 100
+            # 200% over-provisioning: nominal PVC sizes (~157Gi/node across all
+            # volumes) exceed a single node's schedulable storage after the 30%
+            # reservation, but actual data is far smaller. Needed so all volumes
+            # can schedule at once (e.g. a full restore); minimal-available (15%)
+            # still guards real disk exhaustion.
+            storageOverProvisioningPercentage: 200
           # Backup target = throwaway MinIO on the workstation, reached over
           # tailscale. The endpoint + keys live in the operator-applied Secret
           # longhorn-backup-credential (NOT in git / Vault, so restores work while

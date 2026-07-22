@@ -5,6 +5,11 @@ metadata:
   namespace: databases
 spec:
   instances: 3
+  # Pin the PostgreSQL major to match the on-disk data (PG16). Without this the
+  # cluster tracks the operator's default image (now PG18), which refuses to open
+  # the PG16 data directory ("database files are incompatible"). A major-version
+  # upgrade must be a deliberate, separate operation — not an implicit default.
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.10-standard-bookworm
   primaryUpdateMethod: switchover
   primaryUpdateStrategy: unsupervised
   certificates:
