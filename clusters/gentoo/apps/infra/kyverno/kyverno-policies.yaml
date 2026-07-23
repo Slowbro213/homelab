@@ -10,13 +10,21 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    # This chart deploys ONLY cluster-scoped ClusterPolicies, so the destination
-    # namespace never receives a resource — it only affects Argo CD's tracking. Argo CD
-    # associates cluster-scoped resources with the destination namespace; when that is any
-    # namespace other than the control namespace it creates a phantom namespaced entry
-    # that never reconciles → permanent OutOfSync. Using `argocd` (matching the working
-    # security-baseline app, which also ships cluster-scoped ClusterPolicies) collapses it.
-    namespace: argocd
+    namespace: kyverno
+
+  # Kyverno's admission webhook writes server-side defaults onto every ClusterPolicy that the
+  # upstream chart never renders (.spec.admission, .spec.emitWarning, and per-rule
+  # .spec.rules[].skipBackgroundRequests), so Argo CD saw permanent drift → OutOfSync with an
+  # empty visible diff. Ignore exactly those webhook-added fields. (The repo's own
+  # security-baseline ClusterPolicies avoid this by hard-coding admission/emitWarning to match;
+  # we can't edit this chart's templates, so we ignore them instead.)
+  ignoreDifferences:
+    - group: kyverno.io
+      kind: ClusterPolicy
+      jqPathExpressions:
+        - .spec.admission
+        - .spec.emitWarning
+        - .spec.rules[].skipBackgroundRequests
 
   source:
     repoURL: https://kyverno.github.io/kyverno
