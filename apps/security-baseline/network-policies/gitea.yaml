@@ -155,6 +155,21 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+
+    # Public internet HTTPS egress, needed for migrating/mirroring repos from
+    # external git hosts (e.g. github.com). Excludes RFC1918 + the Tailscale
+    # CGNAT range, which are already covered by the rules above.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+      ports:
+        - protocol: TCP
+          port: 443
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
