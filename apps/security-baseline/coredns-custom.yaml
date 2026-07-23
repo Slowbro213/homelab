@@ -8,10 +8,18 @@ data:
     gentoo.lan:53 {
       errors
       cache 30
+      # NOTE: this is the ClusterIP of svc/traefik in kube-system, and a ClusterIP is
+      # only stable for the life of the cluster. The NixOS rebuild moved traefik from
+      # 10.43.187.55 -> 10.43.117.63, which silently pointed every *.gentoo.lan name at
+      # a dead IP ("connection refused") and crash-looped zot's OIDC discovery.
+      # Re-pin after any cluster rebuild:
+      #   kubectl -n kube-system get svc traefik -o jsonpath='{.spec.clusterIP}'
+      # (A rebuild-proof alternative is to use the node IPs 192.168.1.31/.25, which
+      # traefik's svclb also serves on :443 and which the NixOS flake pins.)
       hosts {
-        10.43.187.55 sso.gentoo.lan
-        10.43.187.55 git.gentoo.lan
-        10.43.187.55 registry.gentoo.lan
+        10.43.117.63 sso.gentoo.lan
+        10.43.117.63 git.gentoo.lan
+        10.43.117.63 registry.gentoo.lan
         fallthrough
       }
     }

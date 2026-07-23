@@ -20,8 +20,11 @@ spec:
 
       automountServiceAccountToken: false
 
+      # Must match the traefik ClusterIP pinned in
+      # apps/security-baseline/coredns-custom.yaml -- update both together after a
+      # cluster rebuild (see the note there).
       hostAliases:
-        - ip: 10.43.187.55
+        - ip: 10.43.117.63
           hostnames:
             - git.gentoo.lan
 
