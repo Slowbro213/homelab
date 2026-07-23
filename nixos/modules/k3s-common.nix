@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
   services.openiscsi = {
     enable = true;
@@ -30,7 +30,26 @@
     "L+ /usr/local/sbin/iscsiadm - - - - /run/current-system/sw/bin/iscsiadm"
   ];
 
-  environment.etc."rancher/k3s/registries.yaml".source = ../assets/registries.yaml;
+  # registries.yaml carries the registry-admin password (Zot requires auth for
+  # pulls), so it is rendered from a sops template rather than shipped as a static
+  # asset — the plaintext secret never lands in the Nix store or git. k3s reads
+  # this file only at startup to generate containerd's registry config, so k3s /
+  # k3s-agent must be restarted after this file changes.
+  sops.templates."registries.yaml".content = ''
+    mirrors:
+      registry.gentoo.lan:
+        endpoint:
+          - "http://registry.gentoo.lan"
+    configs:
+      "registry.gentoo.lan":
+        auth:
+          username: registry-admin
+          password: ${config.sops.placeholder."registry/password"}
+        tls:
+          ca_file: /etc/rancher/k3s/certs/gentoo-internal-ca.crt
+  '';
+  environment.etc."rancher/k3s/registries.yaml".source =
+    config.sops.templates."registries.yaml".path;
   environment.etc."rancher/k3s/certs/gentoo-internal-ca.crt".source =
     ../assets/gentoo-internal-ca.crt;
 }

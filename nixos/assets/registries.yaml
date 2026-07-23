@@ -1,8 +1,0 @@
-mirrors:
-  registry.gentoo.lan:
-    endpoint:
-      - "http://registry.gentoo.lan"
-configs:
-  "registry.gentoo.lan":
-    tls:
-      ca_file: /etc/rancher/k3s/certs/gentoo-internal-ca.crt

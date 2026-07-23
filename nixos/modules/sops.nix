@@ -8,6 +8,12 @@
   sops.secrets."k3s/token" = { };
   sops.secrets."wifi/env" = { };
   sops.secrets."slowking/hashed-password" = { neededForUsers = true; };
+  # registry-admin password for pulling from the internal Zot registry
+  # (registry.gentoo.lan). Rendered into /etc/rancher/k3s/registries.yaml via a
+  # sops template in k3s-common.nix — Zot requires auth for reads (no anonymous
+  # pull policy), so kubelet must present these creds or every internal image
+  # pull fails with 401 ImagePullBackOff.
+  sops.secrets."registry/password" = { };
 
   # NOTE: The machine's SSH host key at /etc/ssh/ssh_host_ed25519_key IS the age
   # identity sops uses to decrypt (sops.age.sshKeyPaths above). It is delivered as a
