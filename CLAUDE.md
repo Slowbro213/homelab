@@ -122,33 +122,70 @@ instead.
 
 ## The live cluster ("gentoo")
 
-Two nodes, reachable directly by SSH (no jump host, no interactive password prompt for the SSH
-login itself):
+Two nodes, both running **NixOS 25.11** (systemd), k3s `v1.34.5+k3s1`. Reach them directly by
+SSH as `slowking` with key `-i ~/.ssh/id_ed25519` (no jump host, no login password). The old
+`cachyos-x8664` / bare `tux` / `cachyos` SSH aliases are **defunct — use the IPs**:
 
-- **`ssh slowking@cachyos-x8664`** — control-plane node. Hostname `cachyos`, OS is **CachyOS**
-  (Arch-based, systemd), 8 cores / 13Gi RAM, `k3s.service` managed via `systemctl`. `kubectl`
-  works here out of the box as the `slowking` user with **no sudo needed** — `/etc/rancher/k3s/k3s.yaml`
-  is world-readable and `kubectl` picks it up automatically (no `KUBECONFIG` export required).
-  This is the node to SSH into for any `kubectl`/`helm`/`kustomize` inspection — all three
-  binaries are installed here. It is also on the tailnet itself (`tail27527e.ts.net`) alongside
-  every app exposed via Tailscale Ingress (argocd, gitea, grafana, vault, minio, longhorn, ...).
-- **`ssh slowking@tux`** — the sole worker node. Hostname is actually `registry.gentoo.lan`
-  (matches the cluster name used throughout this repo), OS is **Gentoo** (OpenRC, not systemd —
-  use `rc-status`/`ps`, not `systemctl`), 1 CPU-limited i5-6200U-class box. Runs `k3s-agent` via
-  OpenRC's `supervise-daemon`. `kubectl` is installed but **not usable** here (`~/.kube/config`
-  isn't readable by `slowking`, and there's no world-readable admin kubeconfig like on the
-  control node) — do cluster-wide `kubectl` work from `cachyos-x8664` instead. SSH here mainly
-  to check node-local state: disk/Longhorn replica storage, containerd, host processes.
-- **`sudo` requires a password on both nodes** — don't attempt commands that need `sudo` over a
-  non-interactive SSH session; they'll just hang/fail. Everything needed for cluster
-  inspection (kubectl, helm, kustomize, Longhorn's `/var/lib/longhorn`, log reading) is
-  reachable as the unprivileged `slowking` user already.
+- **`ssh slowking@192.168.1.31`** — control-plane node, hostname `cachyos` (8 cores / 13Gi RAM,
+  WiFi-only laptop). `k3s.service` via `systemctl`. `kubectl`/`helm`/`kustomize` all work here
+  out of the box as `slowking` with **no sudo** — `/etc/rancher/k3s/k3s.yaml` is world-readable
+  and picked up automatically (no `KUBECONFIG` needed). **Do all cluster-wide `kubectl` work
+  from this node.** It's also on the tailnet alongside every Tailscale-Ingress app (argocd,
+  gitea, grafana, vault, minio, longhorn, authentik, alertmanager).
+- **`ssh slowking@192.168.1.25`** — sole worker/agent node, hostname `tux` but its **k3s
+  node-name is `registry.gentoo.lan`** (matches the cluster name; also where the internal Zot
+  registry ingress resolves — `registry.gentoo.lan` → 192.168.1.25). CPU-limited i5-6200U box.
+  Agent `k3s.service` via `systemctl`. `kubectl` is **not usable** here (no readable kubeconfig)
+  — inspect only node-local state (Longhorn replicas, containerd, host processes). The
+  `gitea-runner` is nodeSelector-pinned here (needs its Localhost seccomp profile).
+- **`sudo` needs a password for `slowking`** on both nodes — don't run sudo over non-interactive
+  SSH; it hangs. Everything for cluster inspection works unprivileged. (The separate `deploy`
+  user has NOPASSWD sudo, used only for node rebuilds — see the nixos flake below.)
 - Both nodes run **Longhorn** with local storage under `/var/lib/longhorn` (`replicas/`,
-  `engine-binaries/`, `longhorn-disk.cfg`) — this is where PVC data actually lives on disk if
-  you ever need to check replica state directly rather than through the Longhorn UI/CRDs.
-- k3s versions can drift between server and agent (seen: server `v1.36.0+k3s`, agent
-  `v1.35.5+k3s` at time of writing) — don't assume they're pinned to the same version; check
-  `kubectl get nodes -o wide` rather than assuming.
+  `engine-binaries/`, `longhorn-disk.cfg`) — where PVC replica data actually lives on disk.
+- Don't assume server/agent k3s versions are pinned identical; check `kubectl get nodes -o wide`.
+
+### The nixos/ flake (node OS — deployed manually, NOT by Argo CD)
+
+`nixos/` (repo root) is a NixOS flake defining **both nodes' OS** — the one part of this repo
+**outside Argo CD's watched path**, so committing/pushing `nixos/` deploys **nothing**. The
+"commit to main = deploy" rule does NOT apply here. Nodes are updated only by a deliberate
+manual rebuild from a machine holding the sops age key (`~/.config/sops/age/keys.txt`):
+
+```
+cd nixos
+NIX_SSHOPTS="-i ~/.ssh/gentoo_deploy_ed25519 -o StrictHostKeyChecking=no" \
+  nixos-rebuild switch --flake .#cachyos --target-host deploy@192.168.1.31 --use-remote-sudo
+# ...and .#tux --target-host deploy@192.168.1.25 for the worker
+```
+
+- The `deploy` user has **NOPASSWD sudo**, so `--use-remote-sudo` runs non-interactively. Build
+  first with `nix build .#nixosConfigurations.<host>.config.system.build.toplevel --no-link` to
+  catch eval/build errors before deploying.
+- Layout: `modules/*` shared, `hosts/<host>/*` per-node hardware/role, `mkNode` in `flake.nix`.
+- **Node secrets use sops-nix** (age), NOT Vault — `secrets/cluster.yaml` (+ per-host files),
+  recipients in `.sops.yaml` (`ws`/`cachyos`/`tux`). The runtime decrypt key IS each machine's
+  SSH host key at `/etc/ssh/ssh_host_ed25519_key` — **never manage that path via sops** (circular
+  dep → nothing decrypts). Add a secret with
+  `sops set secrets/cluster.yaml '["k"]["v"]' '"…"'`; inject it into a rendered config file via
+  `sops.templates.<name>` (never plaintext in git or the Nix store).
+- Node-local quirks the flake pins (don't rediscover): `networking.enableIPv6=false` (WiFi has
+  no IPv6 → image pulls resolve AAAA and fail); `--node-label node.longhorn.io/create-default-disk=true`
+  on both nodes (else Longhorn has 0 capacity, no PVC schedules); `iscsiadm` symlinked into host
+  PATH for Longhorn nsenter; tux `logind.lidSwitch="ignore"`. Postgres is pinned to a PG16 image
+  (`apps/postgres/cluster.yaml`) to match restored data.
+
+### Internal registry auth (registry.gentoo.lan / Zot)
+
+App images are pulled from the in-cluster **Zot** registry at `registry.gentoo.lan` (mirror
+configured in each node's `/etc/rancher/k3s/registries.yaml`). **Zot requires auth for reads**
+(its `accessControl` has no anonymous policy), so `registries.yaml` MUST carry the
+`registry-admin` credential or every pull 401s → cluster-wide `ImagePullBackOff`. That file is
+rendered from `sops.templates."registries.yaml"` in `nixos/modules/k3s-common.nix` (secret
+`registry/password`, = the `zot-auth` Secret's `registry-admin` password). **k3s reads
+registries.yaml only at startup** — after changing it, k3s/k3s-agent must restart (a
+`nixos-rebuild switch` does this automatically when the unit closure changes). Zot's storage
+backend is the in-cluster MinIO (bucket `zot`).
 
 ### Working on the live cluster: keep it lightweight
 

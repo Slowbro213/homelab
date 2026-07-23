@@ -93,6 +93,8 @@ Builds on the workstation and pushes closures (tux is too weak to build locally)
 4. `nix build .#nixosConfigurations.<new>.config.system.build.toplevel`, then install as above.
 
 ## Integration with the cluster rebuild
-This produces "k3s running on NixOS". Then follow Phase 4 of
-`docs/superpowers/specs/2026-07-21-nixos-migration-backup-restore-design.md`: bootstrap Argo CD
-→ infra syncs in sync-wave order → re-add Velero → `velero restore` PVCs → unseal Vault.
+This produces "k3s running on NixOS". The one-time bring-up of cluster workloads on fresh nodes
+then goes: bootstrap Argo CD (must be **v3.1.0+** — the repo uses `syncPolicy.automated.enabled`)
+→ infra Applications sync in sync-wave order → re-add Velero → `velero restore` PVCs from a
+Longhorn backup → unseal Vault. (This has already been done; see the repo-root `CLAUDE.md` for
+day-2 cluster operation.)
