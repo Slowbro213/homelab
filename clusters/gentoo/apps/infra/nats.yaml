@@ -101,13 +101,19 @@ spec:
                     release: monitoring
           podTemplate:
             merge:
-              securityContext:
-                runAsNonRoot: true
-                runAsUser: 1000
-                runAsGroup: 1000
-                fsGroup: 1000
-                seccompProfile:
-                  type: RuntimeDefault
+              # podTemplate.merge maps onto .spec.template (a PodTemplateSpec), so the
+              # pod-level securityContext must live under .spec here. Without the `spec:`
+              # nesting it renders as the invalid field .spec.template.securityContext,
+              # which the API silently drops — leaving live securityContext={} and Argo CD
+              # permanently OutOfSync against the (unappliable) rendered manifest.
+              spec:
+                securityContext:
+                  runAsNonRoot: true
+                  runAsUser: 1000
+                  runAsGroup: 1000
+                  fsGroup: 1000
+                  seccompProfile:
+                    type: RuntimeDefault
           natsBox:
             enabled: false
           service:

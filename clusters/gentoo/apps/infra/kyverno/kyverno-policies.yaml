@@ -10,7 +10,13 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: kyverno
+    # This chart deploys ONLY cluster-scoped ClusterPolicies, so the destination
+    # namespace never receives a resource — it only affects Argo CD's tracking. Argo CD
+    # associates cluster-scoped resources with the destination namespace; when that is any
+    # namespace other than the control namespace it creates a phantom namespaced entry
+    # that never reconciles → permanent OutOfSync. Using `argocd` (matching the working
+    # security-baseline app, which also ships cluster-scoped ClusterPolicies) collapses it.
+    namespace: argocd
 
   source:
     repoURL: https://kyverno.github.io/kyverno
