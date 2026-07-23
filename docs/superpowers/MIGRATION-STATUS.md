@@ -44,9 +44,10 @@ ssh -i ~/.ssh/id_ed25519 slowking@192.168.1.31 \
 
 ## Remaining tail items (none affect core data)
 
-### 1. Tailscale admin-UI ingresses → cascades to `gitea` → `cntdwn` + `programmingclub`  ⟵ biggest item
+### 1. Tailscale admin-UI ingresses → cascades to `gitea` → `cntdwn` + `programmingclub`
 
-**Root cause found 2026-07-23 (the earlier "tailnet ACL" diagnosis below was WRONG).**
+**✅ RESOLVED 2026-07-23.** All 8 proxies Running on clean base hostnames; gitea Healthy; cntdwn and
+programmingclub left `Unknown`. Root cause below (the earlier "tailnet ACL" diagnosis was WRONG).
 
 Every ingress reconcile fails with:
 ```
@@ -101,29 +102,126 @@ API: SYSTEM.config  Unable to initialize config, some features may be missing:
 API: SYSTEM.iam     IAM sub-system is partially initialized, unable to write the IAM format:
       madmin: invalid encryption algorithm ID
 ```
-The PVC genuinely holds the restored original data (`/export/.minio.sys/config/config.json` dated
-May 19, `iam/` dated Jul 15, buckets `loki` / `postgres-backups` / `zot`). `minio-kms` *did* sync
-from Vault (`secret/minio/kms`), so the `MINIO_KMS_SECRET_KEY` now in the cluster is simply **not the
-key that encrypted this data** — despite Vault being restored from the raft snapshot. Note the
-warning already in `apps/minio/values.yaml`: rotating this key without migration makes old
-ciphertext undecryptable.
+The Vault key was **not** rotated and no data was lost. The actual bug was in this repo: the minio
+chart mounts the `minio-kms` Secret at `/tmp/minio-config-env` and reads
+`MINIO_CONFIG_ENV_FILE=/tmp/minio-config-env/config.env`, so the key only reaches the server if the
+Secret contains a member literally named **`config.env`** holding env-file lines. The
+`VaultStaticSecret` copied Vault's keys verbatim (`MINIO_KMS_SECRET_KEY`, `_raw`), so that file never
+existed and MinIO ran with **no KMS at all** — hence it could not decrypt `.minio.sys/config`, IAM
+never initialised, no users existed, and every S3 client got `InvalidAccessKeyId`.
 
-**Resume — in order:**
-1. Check Vault KV-v2 version history for the key; if an older version exists, roll back to it.
-   ```bash
-   vault kv metadata get secret/minio/kms      # how many versions, when written
-   vault kv get -version=<N> secret/minio/kms
-   ```
-   This is the clean fix and preserves the SSE-S3 encrypted objects.
-2. Only if the original key is unrecoverable: move `.minio.sys/config` aside so MinIO reinitialises,
-   then re-run the chart's provisioning hook to recreate users/policies/buckets. SSE-S3 *objects*
-   stay undecryptable — acceptable for `zot` (disposable CI cache) and `loki` (already written off),
-   but `postgres-backups` would need re-seeding from a fresh backup.
+**Fixed** in `apps/secrets/vault-sync/static-secrets.yaml` (commit `8f7884c`) by adding a
+`destination.transformation` that synthesises `config.env`, plus `overwrite: true`:
+```yaml
+    transformation:
+      excludeRaw: true
+      templates:
+        config.env:
+          text: 'export MINIO_KMS_SECRET_KEY={{ get .Secrets "MINIO_KMS_SECRET_KEY" }}'
+```
+Recovery performed: moved the undecryptable `.minio.sys/config` aside, confirmed MinIO reinitialised,
+then — once `config.env` was in place — restored the *original* config back. MinIO decrypted it
+cleanly, the original users (`loki`/`postgres`/`zot`) came back and the SSE-encrypted objects list
+and read fine. **All ~7.9G intact** (`loki` 1.5G, `postgres-backups` 5.6G, `zot` 804M). The Argo
+`minio` sync then succeeded (the post-job's `encrypt set sse-s3` needs a working KMS).
 
-Cascades off this: **gitea-runner** `ImagePullBackOff` on
-`registry.gentoo.lan/infra/gitea-runner-tools:0.3.0` (it needs zot, *not* gitea — the earlier
-handoff had this wrong), and the two unsynced `VaultStaticSecret`s `argocd/zot-pull` +
-`argocd/argocd-image-updater-gitea`.
+Two throwaway copies are left on the volume and can be deleted once you're happy:
+`/export/.minio.sys/config.broken-*` (the original, pre-recovery) and `config.nokms-*` (the
+short-lived KMS-less one).
+
+Diagnostic note: `mc ls local/zot` returning `Unable to list folder. KMS not configured` is the
+tell that objects are SSE-encrypted and the server has no KMS — not that the data is gone.
+
+### 2b. Stale traefik ClusterIP broke every `*.gentoo.lan` name
+
+Surfaced only after the S3 failure cleared: zot then panicked on
+`Get "https://sso.gentoo.lan/...": dial tcp 10.43.187.55:443: connect: connection refused`.
+
+`10.43.187.55` was the **old cluster's** `svc/traefik` ClusterIP, hardcoded in
+`apps/security-baseline/coredns-custom.yaml` and `apps/gitea-runners/runner.yaml` (`hostAliases`).
+The rebuild moved traefik to `10.43.117.63`, silently pointing `sso`/`git`/`registry.gentoo.lan` at
+a dead IP. Both files re-pinned in commit `8f7884c`.
+
+**A ClusterIP is only stable for the life of a cluster — re-pin both files after any rebuild:**
+```bash
+kubectl -n kube-system get svc traefik -o jsonpath='{.spec.clusterIP}'
+```
+A rebuild-proof alternative is to use the node IPs (`192.168.1.31`/`.25`), which traefik's svclb also
+serves on :443 and which the NixOS flake pins.
+
+Cascades off zot: **gitea-runner**, **cntdwn** and **programmingclub** all `ImagePullBackOff` on
+`registry.gentoo.lan/...` (they need zot, *not* gitea — the original handoff had this wrong), and the
+two unsynced `VaultStaticSecret`s `argocd/zot-pull` + `argocd/argocd-image-updater-gitea`.
+
+### 2c. Nodes trust a stale `gentoo-internal-ca` → all `registry.gentoo.lan` pulls fail
+
+Surfaced last, once zot was actually serving. kubelet/containerd on both nodes:
+```
+failed to resolve reference "registry.gentoo.lan/infra/gitea-runner-tools:0.3.0":
+tls: failed to verify certificate: x509: certificate signed by unknown authority
+(possibly because of "x509: ECDSA verification failure" while trying to verify
+ candidate authority certificate "gentoo-internal-ca")
+```
+The rebuild regenerated cert-manager's self-signed root, but the nodes pin a **checked-in copy** of
+the old one — `nixos/assets/gentoo-internal-ca.crt`, deployed to
+`/etc/rancher/k3s/certs/gentoo-internal-ca.crt` by `nixos/modules/k3s-common.nix` and referenced from
+`nixos/assets/registries.yaml`. Same CN, different key, hence the confusing "ECDSA verification
+failure" rather than a plain unknown-authority error.
+
+| | fingerprint (SHA256, first bytes) | notBefore |
+|---|---|---|
+| live (cert-manager secret `cert-manager/gentoo-internal-ca`) | `7C:A7:7C:2B…` | Jul 22 2026 |
+| pinned on nodes / in repo (stale) | `70:2C:55:AC…` | May 21 2026 |
+
+Asset refreshed from the live secret. **This is a node-level change — Argo does not deploy it.**
+Apply on *each* node (needs the interactive sudo password):
+```bash
+sudo nixos-rebuild switch --flake 'github:Slowbro213/homelab?dir=nixos#cachyos'   # on cachyos
+sudo nixos-rebuild switch --flake 'github:Slowbro213/homelab?dir=nixos#tux'       # on tux
+```
+Re-capture the asset any time the CA changes:
+```bash
+kubectl -n cert-manager get secret gentoo-internal-ca -o jsonpath='{.data.tls\.crt}' \
+  | base64 -d > nixos/assets/gentoo-internal-ca.crt
+```
+
+⚠️ **Recurring footgun.** The `gentoo-internal-ca` Certificate in
+`apps/cert-manager/internal-issuers.yaml` sets no `duration`/`renewBefore`, so it takes cert-manager's
+90-day default and rotates roughly every 60 days (this one expires **Oct 20 2026**). Every rotation
+silently re-breaks node→registry image pulls until the asset is re-captured and both nodes are
+rebuilt. Worth giving the root an explicit long life, e.g.:
+```yaml
+spec:
+  duration: 87600h     # 10 years
+  renewBefore: 720h    # 30 days
+```
+Do that as a *deliberate* change, not in the middle of a repair: editing it forces cert-manager to
+reissue the root, which invalidates every leaf signed by the old CA (Postgres `serverTLSSecret`,
+gitea's `SSL_MODE: verify-full` DB connection, …) until those leaves are re-issued — and the node
+asset then has to be re-captured and redeployed again anyway.
+
+### 2d. Argo CD UI infinite redirect loop — ✅ RESOLVED (not in git, see warning)
+
+`https://argocd-argocd-tailscale.tail27527e.ts.net/` returned `307` to *itself* — an infinite
+redirect loop (`curl` exit 47, too many redirects), so the UI never loaded.
+
+argocd-server was running in TLS mode behind the tailscale ingress, which terminates TLS and forwards
+plain HTTP to `argocd-server:80`. The server saw a non-TLS request and 307-redirected to `https://`,
+which came straight back through the same proxy. Fixed the standard way — serve plain HTTP behind the
+TLS-terminating proxy:
+```bash
+kubectl -n argocd patch cm argocd-cmd-params-cm --type merge -p '{"data":{"server.insecure":"true"}}'
+kubectl -n argocd rollout restart deploy/argocd-server
+```
+Verified: `HTTP 200`, 0 redirects, `<title>Argo CD</title>`. All 8 tailscale admin UIs return 200
+(argocd, authentik, gitea, grafana, alertmanager, longhorn, minio, vault).
+
+⚠️ **This change is not in git.** Argo CD is bootstrapped from the upstream pinned `install.yaml`
+(`ARGOCD_INSTALL_URL`, see the migration plan) and is *not* self-managed by an `Application`, so
+nothing reconciles it — that is also why the setting was silently lost when Argo CD was reinstalled
+during the migration (stock `install.yaml` ships `argocd-cmd-params-cm` empty, so
+`ARGOCD_SERVER_INSECURE` resolves to `""` → false). **Re-apply the patch above after any Argo CD
+reinstall/upgrade from install.yaml**, or fold it into the bootstrap procedure.
 
 ### 3. prometheus / alertmanager — ✅ RESOLVED (verified 2026-07-23)
 
