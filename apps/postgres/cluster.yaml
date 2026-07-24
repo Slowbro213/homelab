@@ -51,22 +51,15 @@ spec:
     limits:
       cpu: "2"
       memory: 2Gi
-  backup:
-    barmanObjectStore:
-      destinationPath: s3://postgres-backups/ha-cluster/
-      endpointURL: http://minio.minio.svc.cluster.local:9000
-      s3Credentials:
-        accessKeyId:
-          name: postgres-s3-credentials
-          key: ACCESS_KEY_ID
-        secretAccessKey:
-          name: postgres-s3-credentials
-          key: ACCESS_SECRET_KEY
-      wal:
-        compression: gzip
-      data:
-        compression: gzip
-    retentionPolicy: "30d"
+  # WAL archiving and base backups go through the Barman Cloud plugin (see
+  # apps/cnpg-barman-plugin and objectstore.yaml) rather than the deprecated in-tree
+  # barmanObjectStore support, since the "standard" image below doesn't bundle
+  # barman-cli-cloud (only the deprecated "system" image variant does).
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: postgres-ha-store
   monitoring:
     enablePodMonitor: true
   affinity:

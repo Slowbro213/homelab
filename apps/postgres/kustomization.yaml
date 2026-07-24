@@ -5,3 +5,4 @@ resources:
   - cluster.yaml
   - database-programmingclub.yaml
   - scheduled-backup.yaml
+  - objectstore.yaml

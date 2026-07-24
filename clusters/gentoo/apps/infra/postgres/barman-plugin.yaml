@@ -1,0 +1,27 @@
+# Step 2: Deploy the Barman Cloud CNPG-I plugin (must be in the operator's namespace).
+# The postgres-ha Cluster (sync-wave 5, apps/postgres) archives WAL through this plugin
+# instead of the deprecated in-tree barmanObjectStore support, since the "standard"
+# postgres image (see apps/postgres/cluster.yaml) doesn't bundle barman-cli-cloud.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cnpg-barman-plugin
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-4"
+spec:
+  project: infra
+  source:
+    repoURL: https://github.com/Slowbro213/homelab.git
+    targetRevision: HEAD
+    path: apps/cnpg-barman-plugin
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

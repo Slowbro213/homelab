@@ -1,0 +1,6 @@
+# Vendored from https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.13.0/manifest.yaml
+# Bump by re-downloading a newer release tag and replacing manifest.yaml.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - manifest.yaml
