@@ -22,6 +22,7 @@ in
     ];
   };
 
-  # API server, kubelet metrics, and servicelb/traefik ingress (live on both nodes today).
-  networking.firewall.allowedTCPPorts = [ 6443 10250 80 443 ];
+  # API server, kubelet metrics, servicelb/traefik ingress (live on both nodes today),
+  # and node-exporter (hostNetwork, scraped cross-node by Prometheus).
+  networking.firewall.allowedTCPPorts = [ 6443 10250 80 443 9100 ];
 }

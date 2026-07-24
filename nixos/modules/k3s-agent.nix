@@ -24,5 +24,7 @@ in
     ];
   };
 
-  networking.firewall.allowedTCPPorts = [ 10250 80 443 ];
+  # kubelet metrics, servicelb/traefik ingress, and node-exporter (hostNetwork,
+  # scraped cross-node by Prometheus).
+  networking.firewall.allowedTCPPorts = [ 10250 80 443 9100 ];
 }
