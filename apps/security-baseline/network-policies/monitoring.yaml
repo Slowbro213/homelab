@@ -117,6 +117,81 @@ spec:
       ports:
         - protocol: TCP
           port: 8765
+
+    # Node-level scrape targets that live on the host network, so they are
+    # reached at the node IP rather than a pod IP: kubelet (+ cadvisor/probes)
+    # on 10250 and node-exporter on 9100. The matching host firewall ports are
+    # opened in nixos/modules/k3s-{server,agent}.nix.
+    - to:
+        - ipBlock:
+            cidr: 192.168.1.0/24
+      ports:
+        - protocol: TCP
+          port: 10250
+        - protocol: TCP
+          port: 9100
+
+    # Prometheus scrapes CoreDNS metrics (kube-system has no NetworkPolicies of
+    # its own, so only this egress rule gates it).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: TCP
+          port: 9153
+
+    # Prometheus scrapes the NATS exporter (nats/allow-nats-ingress already
+    # permits 7777 from this namespace).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: nats
+      ports:
+        - protocol: TCP
+          port: 7777
+
+    # Prometheus scrapes targets inside this namespace: grafana (3000),
+    # kube-state-metrics / prometheus-operator / alertmanager reloader (8080),
+    # prometheus (9090) and alertmanager (9093).
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 9090
+        - protocol: TCP
+          port: 9093
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-scrape-ingress
+  namespace: monitoring
+spec:
+  # Counterpart to the intra-namespace egress rule above: the namespace-wide
+  # default-deny also blocks ingress, so Prometheus needs to be allowed in to
+  # the metrics ports of its neighbours (grafana, kube-state-metrics,
+  # prometheus-operator, alertmanager's config-reloader).
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 8080
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
