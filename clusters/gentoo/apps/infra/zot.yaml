@@ -118,6 +118,17 @@ spec:
           - secretName: gentoo-internal-ca-bundle
             mountPath: /etc/ssl/gentoo
 
+        # zot parses the entire metadb out of the MinIO S3 bucket before it
+        # binds :5000. With ~800M in the bucket that takes well over the
+        # chart default budget (5s + 3x10s = 35s), so the startup probe kills
+        # it mid-parse and it never recovers -> permanent CrashLoopBackOff
+        # after any cold start, which in turn breaks every image pull from
+        # registry.gentoo.lan. Give it 10 minutes to finish.
+        startupProbe:
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 60
+
         service:
           type: ClusterIP
           port: 5000
