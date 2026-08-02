@@ -55,8 +55,13 @@ spec:
   # apps/cnpg-barman-plugin and objectstore.yaml) rather than the deprecated in-tree
   # barmanObjectStore support, since the "standard" image below doesn't bundle
   # barman-cli-cloud (only the deprecated "system" image variant does).
+  # `enabled` is defaulted to true by CNPG. Argo CD owns spec.plugins as an
+  # atomic list under server-side apply, so leaving it unset makes the rendered
+  # list differ from the mutated live one and the app sits permanently
+  # OutOfSync — same reason connectionLimit/inherit are spelled out above.
   plugins:
     - name: barman-cloud.cloudnative-pg.io
+      enabled: true
       isWALArchiver: true
       parameters:
         barmanObjectName: postgres-ha-store
