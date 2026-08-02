@@ -6,7 +6,13 @@ metadata:
 spec:
   retentionPolicy: "30d"
   configuration:
-    destinationPath: s3://postgres-backups/ha-cluster/
+    # No trailing slash. barman-cloud joins destinationPath with the server name,
+    # so "ha-cluster/" yields the key prefix "ha-cluster//postgres-ha" — AWS S3
+    # tolerates the doubled slash but MinIO rejects it on ListObjectsV2
+    # (XMinioInvalidObjectName), which silently broke every retention sweep
+    # while uploads kept working. Resolves to the same prefix existing backups
+    # already live under, so nothing needs moving.
+    destinationPath: s3://postgres-backups/ha-cluster
     endpointURL: http://minio.minio.svc.cluster.local:9000
     s3Credentials:
       accessKeyId:
