@@ -68,7 +68,13 @@ spec:
                   writeBackConfig:
                     method: git:secret:argocd/argocd-image-updater-gitea
                     gitConfig:
-                      repository: http://gitea-http.gitea.svc.cluster.local:3000/thanas-papa/cntdwn.git
+                      # Must be https:// — image-updater only matches https:// (or an
+                      # ssh-style git@host:path) when resolving username/password out of
+                      # the credentials secret, and rejects a plain http:// URL with
+                      # "unknown repository type". git.gentoo.lan is the internal traefik
+                      # ingress in front of gitea-http, served with a gentoo-internal-ca
+                      # cert that the SSL_CERT_FILE/GIT_SSL_CAINFO bundle above trusts.
+                      repository: https://git.gentoo.lan/thanas-papa/cntdwn.git
                       branch: main
                 - namePattern: "*"
                   labelSelectors:
