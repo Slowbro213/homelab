@@ -64,6 +64,25 @@ metrics:
       release: monitoring
     interval: 30s
 
+# buildah (`--isolation chroot`, see the gitea-runner CI workflows) copies itself into an
+# anonymous memfd and execs that to run each Dockerfile RUN step inside the build rootfs,
+# instead of writing a helper binary into the image being built. That is exactly the
+# technique the stock "Fileless execution via memfd_create" rule watches for, so every CI
+# build produced a burst of CRITICAL alerts. Upstream whitelists runc (which does the same
+# memfd self-clone) but not buildah, so add the exception here — scoped to the runner image
+# so the rule stays armed for every other container in the cluster.
+customRules:
+  gitea-runner-buildah.yaml: |-
+    - macro: gitea_runner_buildah_memfd
+      condition: >
+        (container.image.repository = "registry.gentoo.lan/infra/gitea-runner-tools"
+         and proc.exepath startswith "memfd:buildah-")
+
+    - rule: Fileless execution via memfd_create
+      condition: and not gitea_runner_buildah_memfd
+      override:
+        condition: append
+
 falcoctl:
   artifact:
     follow:
