@@ -8,10 +8,17 @@ metadata:
 spec:
   route:
     receiver: discord
+    # Falco alerts (via falcosidekick) carry none of Prometheus' label names: the rule name is
+    # `rule`, not `alertname`, and the namespace is `k8s_ns_name`, not `namespace`. Without the
+    # falco-side keys here every critical falco event grouped into one anonymous bucket, so a
+    # burst from a single rule arrived as one wall-of-text message. Prometheus alerts don't
+    # carry `rule`/`k8s_ns_name`, so adding them leaves Prometheus grouping unchanged.
     groupBy:
       - alertname
       - namespace
       - severity
+      - rule
+      - k8s_ns_name
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 4h
@@ -31,9 +38,9 @@ spec:
             {{ if eq .Status "firing" }}🚨 FIRING{{ else }}✅ RESOLVED{{ end }}
             {{ range .Alerts }}
 
-            **{{ .Labels.alertname }}**
+            **{{ or .Labels.alertname .Labels.rule "unnamed alert" }}**
             Severity: `{{ .Labels.severity }}`
-            Namespace: `{{ .Labels.namespace }}`
+            Namespace: `{{ or .Labels.namespace .Labels.k8s_ns_name .Labels.hostname "-" }}`
             {{ if .Annotations.summary }}
             Summary: {{ .Annotations.summary }}
             {{ end }}
