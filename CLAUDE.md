@@ -96,6 +96,19 @@ internal service-to-service TLS (e.g. Postgres `serverTLSSecret`, gitea's DB con
 internal CA get it injected via trust-manager, gated by the
 `trust.gentoo.lan/internal-ca: "true"` namespace label.
 
+The internal CA is pinned in **two** places that must stay in sync: the cert-manager Secret
+`cert-manager/gentoo-internal-ca`, and a static copy committed at
+`nixos/assets/gentoo-internal-ca.crt`, deployed to `/etc/rancher/k3s/certs/gentoo-internal-ca.crt`
+and used as the `ca_file` for `registry.gentoo.lan` in each node's `registries.yaml`. Nothing
+reconciles those against each other. If cert-manager ever regenerates the CA with a **new key**
+(e.g. its Secret was deleted), every image pull in the cluster fails with
+`x509: ... ECDSA verification failure ... "gentoo-internal-ca"` — same subject, different key.
+Fix by restoring the original Secret (delete the `Certificate` first, apply the Secret, then let
+Argo recreate the `Certificate` so cert-manager *adopts* it instead of reissuing, and delete the
+leaf Secrets of the 8 Certificates using the `gentoo-internal-ca` ClusterIssuer so they re-chain),
+or by updating the asset and rebuilding both nodes. Routine 90-day renewal is safe — cert-manager
+reuses the key.
+
 ## Networking / exposure
 
 - Internal-only admin UIs are exposed via Tailscale Ingress under `apps/tailscale/<app>/`
@@ -105,6 +118,20 @@ internal CA get it injected via trust-manager, gated by the
 - Kyverno denies plain `LoadBalancer` Services outside of Tailscale's `loadBalancerClass`
   (see security-baseline above) — don't add a bare `type: LoadBalancer` Service expecting it
   to sync.
+
+## Alerting
+
+Falco → falcosidekick → Alertmanager → Discord, wired in `apps/monitoring/config/`
+(`alertmanagerconfig-discord.yaml`, webhook from Vault; `prometheus-rule-alertmanager-test.yaml`
+is a synthetic always-firing alert kept at `severity: warning` so it stays off Discord). Only
+`severity=critical` routes to Discord; everything else hits the `null` receiver. The gotcha:
+falco events arrive with **falco's** label names, not Prometheus' — the rule name is `rule`, not
+`alertname`, and the namespace is `k8s_ns_name`, not `namespace`. Any template or `groupBy`
+touching those must handle both, or falco alerts render with a blank title/namespace and collapse
+into a single unnamed group. Falco rule exceptions go in `customRules` in `apps/falco/values.yaml`
+(chart mounts them at `/etc/falco/rules.d`); validate one with
+`kubectl -n falco exec <falco-pod> -c falco -- falco --validate /etc/falco/falco_rules.yaml --validate <file>`
+before committing.
 
 ## CI/CD for application repos
 
@@ -116,7 +143,7 @@ internal Zot registry at `registry.gentoo.lan`), then Argo CD Image Updater (`ar
 `clusters/gentoo/apps/infra/`) bumps the running digest and writes back to the app's own repo —
 see the `argocd-image-updater.argoproj.io/*` annotations on `clusters/gentoo/apps/cntdwn.yaml`
 for the pattern. There used to be a `templates/frontend-app/` scaffold for bootstrapping new
-frontend repos with this pattern; it was removed (commit `be03df8`) — if asked to add a new
+frontend repos with this pattern; it was removed (commit `45560d8`) — if asked to add a new
 frontend app, look at `cntdwn.yaml` and `programmingclub.yaml` as the closest live references
 instead.
 
@@ -169,6 +196,16 @@ NIX_SSHOPTS="-i ~/.ssh/gentoo_deploy_ed25519 -o StrictHostKeyChecking=no" \
   dep → nothing decrypts). Add a secret with
   `sops set secrets/cluster.yaml '["k"]["v"]' '"…"'`; inject it into a rendered config file via
   `sops.templates.<name>` (never plaintext in git or the Nix store).
+- **Secrets are encrypted at rest** — `--secrets-encryption` in `modules/k3s-server.nix`. Enabling
+  it is safe; *rotating the key is not*. On 2026-08-03 a `k3s secrets-encrypt` rotation
+  re-encrypted all 114 secrets under the key it was about to delete, making every secret in the
+  cluster unreadable (`no matching key was found for the provided AES transformer`). k3s's staged
+  flow needs `systemctl restart k3s` **between** `prepare`/`rotate`/`reencrypt`; `rotate-keys` in
+  one shot did not restart in time. Do not run these commands here. Recovery is only possible
+  while the API server still has its watch cache warm (LIST works when GET fails —
+  `kubectl get secrets -A -o json` is then the only copy), because the datastore is kine/**SQLite**
+  (`/var/lib/rancher/k3s/server/db/state.db`, not etcd) and Velero has no `Schedule`, so there is
+  no automatic backup of cluster state to fall back on.
 - Node-local quirks the flake pins (don't rediscover): `networking.enableIPv6=false` (WiFi has
   no IPv6 → image pulls resolve AAAA and fail); `--node-label node.longhorn.io/create-default-disk=true`
   on both nodes (else Longhorn has 0 capacity, no PVC schedules); `iscsiadm` symlinked into host
@@ -206,7 +243,14 @@ instead of a wall of raw output.
 
 ## Making changes safely
 
-- Validate YAML syntax before committing (`python3 -c "import yaml,sys; yaml.safe_load_all(open(sys.argv[1]))" <file>` works since no `kubectl`/`kustomize`/`helm` binaries are installed in this environment).
+- Validate before committing. This workstation has `kubectl` and `helm` but **no** `kustomize`
+  and **no** PyYAML (`python3 -c "import yaml"` raises `ModuleNotFoundError`), and the local
+  kubectl context points at a dead minikube (`192.168.49.2`) — it cannot reach this cluster.
+  So: render Helm-based `Application`s locally with
+  `helm template <name> <chart> --repo <url> --version <ver> -f apps/<name>/values.yaml`
+  (this catches bad values and shows exactly what Argo will apply), and run anything needing
+  the real API — including `kubectl apply --dry-run=server -f -` to validate a CRD like
+  `AlertmanagerConfig` — over SSH on 192.168.1.31.
 - New `Application`s must reference an existing `AppProject` in `projects.yaml`, and that
   project's `sourceRepos`/`destinations`/`*ResourceWhitelist` must already permit what the
   new `Application` needs, or the sync will fail/be blocked.
