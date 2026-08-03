@@ -19,6 +19,7 @@ in
       # (create-default-disk-labeled-nodes=true). Without it the node reports 0
       # storage and no PVC can schedule.
       "--node-label=node.longhorn.io/create-default-disk=true"
+      "--secrets-encryption"
     ];
   };
 
