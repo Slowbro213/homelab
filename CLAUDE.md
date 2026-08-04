@@ -114,7 +114,22 @@ reuses the key.
 - Internal-only admin UIs are exposed via Tailscale Ingress under `apps/tailscale/<app>/`
   (one `kustomization.yaml` + `ingress.yaml` per app, each with its own
   `clusters/gentoo/apps/tailscale/<app>.yaml` Application).
-- Public-facing services go through Cloudflare Tunnel (`apps/cloudflared/`).
+- Public-facing services go through Cloudflare Tunnel (`apps/cloudflared/`, plus
+  `apps/cloudflared-friend/` tunneling a separate domain for a friend). Both tunnels are
+  remotely managed (`TUNNEL_TOKEN`, no local ingress config), so hostname routing rules live in
+  each Cloudflare Zero Trust dashboard, not in this repo.
+- Neither this repo nor the in-cluster Traefik enforces HTTP→HTTPS redirects — no Middleware
+  CRD, no HelmChartConfig override of k3s's bundled Traefik. That guarantee instead comes from
+  Cloudflare's zone-level **"Always Use HTTPS"** setting (SSL/TLS → Edge Certificates), which is
+  turned on for both tunneled domains: `thanaspapa.com` (git/test subdomains, `apps/cloudflared/`)
+  and `epokaprogramming.com` (`apps/cloudflared-friend/`). This is an out-of-band dashboard
+  setting with no GitOps tracking — if it's ever found off, that's a live gap, not a git diff.
+- HSTS is also enabled (same Cloudflare dashboard, same out-of-band caveat) on both domains:
+  max-age 6 months, includeSubDomains on, preload on. Note the Cloudflare "Preload" toggle only
+  sets the `preload` directive on the response header — it does not by itself get the domain
+  into browsers' baked-in HSTS preload list; that requires a separate submission at
+  hstspreload.org. Once a domain *is* in that list, removal is slow and propagates only as
+  browsers ship new releases, so don't treat preload submission (if/when done) as reversible.
 - Kyverno denies plain `LoadBalancer` Services outside of Tailscale's `loadBalancerClass`
   (see security-baseline above) — don't add a bare `type: LoadBalancer` Service expecting it
   to sync.
