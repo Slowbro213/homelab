@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - prometheus-rule-alertmanager-test.yaml
   - alertmanagerconfig-discord.yaml
+  - grafana-dashboard-node-temperatures.yaml
