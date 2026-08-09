@@ -97,17 +97,6 @@ spec:
                 forward_to = [loki.write.default.receiver]
               }
 
-              local.file_match "kube_audit" {
-                path_targets = [
-                  {"__path__" = "/var/log/kubernetes/audit/audit.log", "job" = "kube-audit"},
-                ]
-              }
-
-              loki.source.file "kube_audit" {
-                targets    = local.file_match.kube_audit.targets
-                forward_to = [loki.write.default.receiver]
-              }
-
               loki.write "default" {
                 endpoint {
                   url = "http://loki-gateway.logging.svc.cluster.local/loki/api/v1/push"
