@@ -20,6 +20,12 @@ spec:
 
         controller:
           type: daemonset
+          volumes:
+            extra:
+              - name: kube-audit-log
+                hostPath:
+                  path: /var/log/kubernetes/audit
+                  type: DirectoryOrCreate
 
         alloy:
           extraEnv:
@@ -33,6 +39,12 @@ spec:
                 secretKeyRef:
                   name: loki-basic-auth
                   key: password
+
+          mounts:
+            extra:
+              - name: kube-audit-log
+                mountPath: /var/log/kubernetes/audit
+                readOnly: true
 
           securityContext:
             allowPrivilegeEscalation: false
@@ -94,6 +106,17 @@ spec:
               loki.process "pod_logs" {
                 stage.cri {}
 
+                forward_to = [loki.write.default.receiver]
+              }
+
+              local.file_match "kube_audit" {
+                path_targets = [
+                  {"__path__" = "/var/log/kubernetes/audit/audit.log", "job" = "kube-audit"},
+                ]
+              }
+
+              loki.source.file "kube_audit" {
+                targets    = local.file_match.kube_audit.targets
                 forward_to = [loki.write.default.receiver]
               }
 
