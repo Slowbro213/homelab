@@ -20,12 +20,6 @@ spec:
 
         controller:
           type: daemonset
-          volumes:
-            extra:
-              - name: kube-audit-log
-                hostPath:
-                  path: /var/log/kubernetes/audit
-                  type: DirectoryOrCreate
 
         alloy:
           extraEnv:
@@ -39,12 +33,6 @@ spec:
                 secretKeyRef:
                   name: loki-basic-auth
                   key: password
-
-          mounts:
-            extra:
-              - name: kube-audit-log
-                mountPath: /var/log/kubernetes/audit
-                readOnly: true
 
           securityContext:
             allowPrivilegeEscalation: false
