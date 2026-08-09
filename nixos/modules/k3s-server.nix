@@ -20,8 +20,20 @@ in
       # storage and no PVC can schedule.
       "--node-label=node.longhorn.io/create-default-disk=true"
       "--secrets-encryption"
+      "--kube-apiserver-arg=audit-log-path=/var/log/kubernetes/audit/audit.log"
+      "--kube-apiserver-arg=audit-policy-file=/etc/rancher/k3s/audit-policy.yaml"
+      "--kube-apiserver-arg=audit-log-maxage=7"
+      "--kube-apiserver-arg=audit-log-maxbackup=5"
+      "--kube-apiserver-arg=audit-log-maxsize=100"
     ];
   };
+
+  # kube-apiserver creates the audit log file itself but not the parent directory.
+  systemd.tmpfiles.rules = [
+    "d /var/log/kubernetes/audit 0750 root root - -"
+  ];
+
+  environment.etc."rancher/k3s/audit-policy.yaml".source = ../assets/audit-policy.yaml;
 
   # API server, kubelet metrics, servicelb/traefik ingress (live on both nodes today),
   # and node-exporter (hostNetwork, scraped cross-node by Prometheus).
