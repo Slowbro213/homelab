@@ -31,7 +31,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-100"
 spec:
-  description: Broad infrastructure project. This intentionally allows cluster-scoped and namespace-scoped resources because it owns controllers, CRDs, webhooks, storage, networking, and core services; tighten after rendering and inventorying each chart.
+  description: Infra project - owns controllers, CRDs, webhooks, storage, networking, core services. Whitelists below reflect the exact kinds live in each Application's status.resources as of 2026-08-11; a chart change adding a new kind needs this list extended.
   sourceRepos:
     - https://charts.longhorn.io/
     - https://charts.min.io/
@@ -99,11 +99,91 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: velero
   clusterResourceWhitelist:
-    - group: "*"
-      kind: "*"
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: cert-manager.io
+      kind: ClusterIssuer
+    - group: kyverno.io
+      kind: ClusterPolicy
+    - group: networking.k8s.io
+      kind: IngressClass
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: scheduling.k8s.io
+      kind: PriorityClass
+    - group: snapshot.storage.k8s.io
+      kind: VolumeSnapshotClass
+    - group: storage.k8s.io
+      kind: StorageClass
+    - group: trust.cert-manager.io
+      kind: Bundle
   namespaceResourceWhitelist:
-    - group: "*"
-      kind: "*"
+    - group: apps
+      kind: DaemonSet
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: argocd-image-updater.argoproj.io
+      kind: ImageUpdater
+    - group: barmancloud.cnpg.io
+      kind: ObjectStore
+    - group: batch
+      kind: Job
+    - group: cert-manager.io
+      kind: Certificate
+    - group: cert-manager.io
+      kind: Issuer
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: PersistentVolumeClaim
+    - group: ""
+      kind: Secret
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: longhorn.io
+      kind: RecurringJob
+    - group: monitoring.coreos.com
+      kind: Alertmanager
+    - group: monitoring.coreos.com
+      kind: AlertmanagerConfig
+    - group: monitoring.coreos.com
+      kind: PodMonitor
+    - group: monitoring.coreos.com
+      kind: Prometheus
+    - group: monitoring.coreos.com
+      kind: PrometheusRule
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: postgresql.cnpg.io
+      kind: Cluster
+    - group: postgresql.cnpg.io
+      kind: Database
+    - group: postgresql.cnpg.io
+      kind: ScheduledBackup
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+    - group: secrets.hashicorp.com
+      kind: VaultConnection
+    - group: velero.io
+      kind: BackupStorageLocation
+    - group: velero.io
+      kind: VolumeSnapshotLocation
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -142,12 +222,18 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-100"
 spec:
+  # namespace: "*" let any Application on this project (sourced from an external,
+  # less-trusted app repo) deploy Secrets/Deployments into ANY namespace, including
+  # sensitive ones like vault/argocd. Scoped to the namespaces the two current
+  # frontend apps actually use; add a new namespace here when onboarding another one.
   sourceRepos:
     - https://git.thanaspapa.com/thanas-papa/*
     - https://github.com/Slowbro213/homelab.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: "*"
+      namespace: programmingclub
+    - server: https://kubernetes.default.svc
+      namespace: cntdwn
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
