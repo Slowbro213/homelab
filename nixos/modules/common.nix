@@ -48,6 +48,6 @@ in
 
   environment.systemPackages = with pkgs; [
     git vim htop btop tmux iproute2 iptables ethtool pciutils usbutils
-    dnsutils curl jq
+    dnsutils curl jq fastfetch aha
   ];
 }
