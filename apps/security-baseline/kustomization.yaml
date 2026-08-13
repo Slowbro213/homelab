@@ -15,6 +15,7 @@ resources:
   - network-policies/nats.yaml
   - network-policies/vault.yaml
   - network-policies/vault-secrets-operator.yaml
+  - network-policies/longhorn.yaml
   - network-policies/databases.yaml
   - network-policies/falco.yaml
   - network-policies/gitea.yaml

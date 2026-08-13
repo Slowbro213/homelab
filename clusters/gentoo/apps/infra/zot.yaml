@@ -16,6 +16,30 @@ spec:
       releaseName: zot
       valuesObject:
         mountConfig: true
+        # zot parses its whole metadb from the MinIO S3 bucket at startup and
+        # 502s/crashes if MinIO isn't answering yet - hit for real on
+        # 2026-08-10 (connection refused to minio.minio.svc.cluster.local:9000
+        # right at boot). Argo sync-wave (minio=-5, zot=0) doesn't help here:
+        # it only orders Argo-driven syncs, not kubelet restarting already-
+        # scheduled pods after a node reboot, which is what actually triggers
+        # this. Gate the real container on a plain TCP check instead so it
+        # holds regardless of what triggered the restart.
+        initContainers:
+          - name: wait-for-minio
+            image: busybox:1.36.1
+            imagePullPolicy: IfNotPresent
+            command:
+              - sh
+              - -c
+              - until nc -z -w2 minio.minio.svc.cluster.local 9000; do echo "waiting for minio..."; sleep 2; done
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsNonRoot: true
+              runAsUser: 65534
+              capabilities:
+                drop: ["ALL"]
+              seccompProfile:
+                type: RuntimeDefault
         podSecurityContext:
           fsGroup: 10001
           runAsGroup: 10001

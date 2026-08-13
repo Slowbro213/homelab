@@ -79,19 +79,17 @@ spec:
           port: 8080
 
     # Longhorn components talk to each other through the namespace backend.
+    # instance-manager engine/replica processes each claim their own TCP port
+    # per volume (observed live in the 8500-8503 and 10000+ range, growing as
+    # volumes/replicas are created), so this can't be pinned to a fixed list
+    # like the manager/webhook ports (9500/9502/9503/8080) without silently
+    # breaking cross-node replica sync as new ports get allocated.
     - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: longhorn-system
       ports:
         - protocol: TCP
-          port: 9500
-        - protocol: TCP
-          port: 9502
-        - protocol: TCP
-          port: 9503
-        - protocol: TCP
-          port: 8080
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -103,26 +101,37 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    # Allow other Longhorn components to reach Longhorn manager / UI / recovery services.
+    # Allow other Longhorn components to reach Longhorn manager / UI / recovery
+    # services, and instance-manager engine/replica processes on their
+    # per-volume dynamic ports (see the matching egress rule above).
     - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: longhorn-system
       ports:
         - protocol: TCP
-          port: 9500
-        - protocol: TCP
-          port: 9502
-        - protocol: TCP
-          port: 9503
-        - protocol: TCP
-          port: 8080
 
     # Allow the dedicated Tailscale ingress to reach the Longhorn frontend service.
+    # NetworkPolicy ports match the pod's real destination port, not the Service's
+    # advertised one: longhorn-frontend listens on 80 but targetPort "http" is
+    # container port 8000 (confirmed live via the Service's Endpoints), so this
+    # has to be 8000 or the Tailscale ingress proxy 502s trying to reach it.
     - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: tailscale
       ports:
         - protocol: TCP
-          port: 80
+          port: 8000
+
+    # kubelet's iSCSI initiator (iscsiadm, run via nsenter into the host netns -
+    # see nixos/ flake notes) connects directly to the instance-manager pod's
+    # tgtd on 3260 to attach volumes; this traffic originates from the host,
+    # not another pod, so it needs an explicit ipBlock like the k8s API egress
+    # rule above.
+    - from:
+        - ipBlock:
+            cidr: 192.168.1.0/24
+      ports:
+        - protocol: TCP
+          port: 3260
