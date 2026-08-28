@@ -16,6 +16,11 @@
 
   security.apparmor.enable = true;  # NixOS-supported LSM (SELinux is not the NixOS default path)
 
+  systemd.coredump.enable = false;
+  security.pam.loginLimits = [
+    { domain = "*"; type = "hard"; item = "core"; value = "0"; }
+  ];
+
   services.tailscale.enable = true;
 
   networking.firewall = {

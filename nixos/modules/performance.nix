@@ -35,7 +35,13 @@
     "vm.dirty_background_ratio" = 5;
     "vm.dirty_ratio" = 10;
     "fs.aio-max-nr" = 1048576;
+    "net.ipv4.tcp_congestion_control" = "bbr";
+    "net.core.default_qdisc" = "fq";
   };
+
+  boot.kernelModules = [ "tcp_bbr" ];
+
+  services.fstrim.enable = true;
 
   services.udev.extraRules = ''
     ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"

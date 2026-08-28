@@ -13,7 +13,7 @@
         };
         root = {
           size = "100%";
-          content = { type = "filesystem"; format = "xfs"; mountpoint = "/"; };
+          content = { type = "filesystem"; format = "xfs"; mountpoint = "/"; mountOptions = [ "noatime" ]; };
         };
       };
     };
