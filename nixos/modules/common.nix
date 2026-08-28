@@ -29,7 +29,7 @@ in
     uid = 1000;
     extraGroups = [ "wheel" ];
     openssh.authorizedKeys.keys = adminKeys;
-    # Interactive password sudo for hands-on admin; hash delivered via sops (Task 8).
+    # Interactive password sudo for hands-on admin.
     hashedPasswordFile = config.sops.secrets."slowking/hashed-password".path;
   };
 

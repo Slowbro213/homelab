@@ -1,6 +1,5 @@
 { pkgs, lib, ... }:
 {
-  # Pinned LTS for a predictable cluster substrate; override per-node if needed.
   boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_6_12;
 
   boot.kernelParams = [
