@@ -6,9 +6,8 @@
   boot.kernelParams = [
     "transparent_hugepage=madvise"
     "psi=1"
+    "mitigations=off"
   ];
-
-  # cgroup v2 unified is the systemd/NixOS default — no action needed.
 
   # Maximum performance: pin the CPU frequency governor to "performance" (never
   # balanced/powersave), and make sure no power-profile daemon overrides it.
@@ -24,7 +23,7 @@
   };
 
   boot.kernel.sysctl = {
-    "vm.swappiness" = 100;              # zram-appropriate
+    "vm.swappiness" = 100; # zram-appropriate
     "vm.overcommit_memory" = 1;
     "vm.max_map_count" = 1048576;
     "fs.inotify.max_user_instances" = 8192;
@@ -34,5 +33,21 @@
     "net.bridge.bridge-nf-call-iptables" = 1;
     "net.core.somaxconn" = 4096;
     "net.netfilter.nf_conntrack_max" = 262144;
+    "vm.dirty_background_ratio" = 5;
+    "vm.dirty_ratio" = 10;
+    "fs.aio-max-nr" = 1048576;
   };
+
+  services.udev.extraRules = ''
+    ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"
+    ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
+  '';
+
+  services.journald.extraConfig = ''
+    SystemMaxUse=500M
+    RateLimitIntervalSec=30s
+    RateLimitBurst=10000
+  '';
+
+  systemd.oomd.enable = false;
 }
