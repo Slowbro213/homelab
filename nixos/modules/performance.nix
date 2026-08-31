@@ -1,6 +1,6 @@
 { pkgs, lib, ... }:
 {
-  boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_6_12;
+  boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
 
   boot.kernelParams = [
     "transparent_hugepage=madvise"
