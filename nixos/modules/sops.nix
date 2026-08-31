@@ -6,7 +6,17 @@
   sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
   sops.secrets."k3s/token" = { };
-  sops.secrets."wifi/env" = { };
+  # nixos-26.05's wpa_supplicant module hardened its systemd unit to run
+  # unprivileged (User=wpa_supplicant, ProtectSystem=strict) instead of root.
+  # It still BindReadOnlyPaths= this file in, but can't open a root-only 0400
+  # file as that user — group-read for wpa_supplicant is required as of 26.05.
+  # The group doesn't exist pre-26.05 (older wpa_supplicant module ran as
+  # root), so guard it — this keeps the module buildable if ever rolled back
+  # to an older generation, same as nixos-25.11 currently is.
+  sops.secrets."wifi/env" = {
+    group = if (config.users.groups ? wpa_supplicant) then "wpa_supplicant" else "root";
+    mode = "0440";
+  };
   sops.secrets."slowking/hashed-password" = { neededForUsers = true; };
   # registry-admin password for pulling from the internal Zot registry
   # (registry.gentoo.lan). Rendered into /etc/rancher/k3s/registries.yaml via a
