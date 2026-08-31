@@ -26,7 +26,7 @@ spec:
           defaultSettings:
             createDefaultDiskLabeledNodes: true
             defaultDataPath: /var/lib/longhorn
-            defaultReplicaCount: 2
+            defaultReplicaCount: 1
             storageMinimalAvailablePercentage: 15
             # 200% over-provisioning: nominal PVC sizes (~157Gi/node across all
             # volumes) exceed a single node's schedulable storage after the 30%
@@ -51,7 +51,7 @@ spec:
             replicas: 1
           persistence:
             defaultClass: false
-            defaultClassReplicaCount: 2
+            defaultClassReplicaCount: 1
             defaultFsType: ext4
             reclaimPolicy: Retain
           extraObjects:
@@ -76,7 +76,7 @@ spec:
               reclaimPolicy: Retain
               volumeBindingMode: WaitForFirstConsumer
               parameters:
-                numberOfReplicas: "2"
+                numberOfReplicas: "1"
                 staleReplicaTimeout: "30"
                 fromBackup: ""
                 fsType: ext4
