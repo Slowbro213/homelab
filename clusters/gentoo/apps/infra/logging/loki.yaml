@@ -68,6 +68,14 @@ spec:
           limits_config:
             retention_period: 168h
 
+          rulerConfig:
+            enable_api: true
+            alertmanager_url: http://monitoring-kube-prometheus-alertmanager.monitoring.svc.cluster.local:9093
+            storage:
+              type: local
+              local:
+                directory: /etc/loki/rules
+
         singleBinary:
           replicas: 1
 
@@ -77,6 +85,15 @@ spec:
           extraEnvFrom:
             - secretRef:
                 name: loki-s3-credentials
+
+          extraVolumes:
+            - name: ruler-rules
+              configMap:
+                name: loki-ruler-rules
+
+          extraVolumeMounts:
+            - name: ruler-rules
+              mountPath: /etc/loki/rules/fake
 
           persistence:
             enabled: true
@@ -89,6 +106,10 @@ spec:
               memory: 256Mi
             limits:
               memory: 1Gi
+
+        sidecar:
+          rules:
+            enabled: false
 
         chunksCache:
           enabled: false

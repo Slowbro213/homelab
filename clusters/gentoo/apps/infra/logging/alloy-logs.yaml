@@ -17,11 +17,25 @@ spec:
           podSecurityContext:
             seccompProfile:
               type: RuntimeDefault
+            supplementalGroups:
+              - 62
 
         controller:
           type: daemonset
+          volumes:
+            extra:
+              - name: journal
+                hostPath:
+                  path: /var/log/journal
+                  type: Directory
 
         alloy:
+          mounts:
+            extra:
+              - name: journal
+                mountPath: /var/log/journal
+                readOnly: true
+
           extraEnv:
             - name: LOKI_BASIC_AUTH_USERNAME
               valueFrom:
@@ -95,6 +109,27 @@ spec:
                 stage.cri {}
 
                 forward_to = [loki.write.default.receiver]
+              }
+
+              loki.source.journal "journal" {
+                path          = "/var/log/journal"
+                labels        = { job = "systemd-journal" }
+                relabel_rules = discovery.relabel.journal.rules
+                forward_to    = [loki.write.default.receiver]
+              }
+
+              discovery.relabel "journal" {
+                targets = []
+
+                rule {
+                  source_labels = ["__journal__hostname"]
+                  target_label  = "node"
+                }
+
+                rule {
+                  source_labels = ["__journal__systemd_unit"]
+                  target_label  = "unit"
+                }
               }
 
               loki.write "default" {

@@ -96,6 +96,14 @@ spec:
                     - monitoring
                   names:
                     - monitoring-prometheus-node-exporter*
+              - resources:
+                  kinds:
+                    - DaemonSet
+                    - Pod
+                  namespaces:
+                    - logging
+                  names:
+                    - alloy-logs*
           restrict-volume-types:
             any:
               - resources:
@@ -106,6 +114,14 @@ spec:
                     - monitoring
                   names:
                     - monitoring-prometheus-node-exporter*
+              - resources:
+                  kinds:
+                    - DaemonSet
+                    - Pod
+                  namespaces:
+                    - logging
+                  names:
+                    - alloy-logs*
           require-run-as-non-root-user:
             any:
               - resources:
