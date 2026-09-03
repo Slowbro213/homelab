@@ -17,8 +17,16 @@ spec:
       containers:
         - name: smartctl-exporter
           image: docker.io/prometheuscommunity/smartctl-exporter:v0.14.0
+          # smartctl can't auto-detect device type ("-d auto") through an
+          # arbitrarily-named path — its heuristics key off conventional
+          # names like /dev/nvme* or /dev/sd*, which /dev/monitored-disk
+          # deliberately isn't. Passing both known types is safe (unlike
+          # guessing across the iSCSI virtual disks): each points at the
+          # same already-verified real disk, so the mismatched probe just
+          # fails fast with a clean protocol error, never a slow/hung scan.
           args:
-            - --smartctl.device=/dev/monitored-disk
+            - --smartctl.device=/dev/monitored-disk;nvme
+            - --smartctl.device=/dev/monitored-disk;sat
           # SMART ioctls (ATA passthrough / NVMe admin commands) need raw
           # device access; smartctl_exporter's own docs recommend
           # privileged+root rather than a narrower capability set, since the
