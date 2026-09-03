@@ -135,3 +135,25 @@ spec:
       ports:
         - protocol: TCP
           port: 3260
+
+    # kube-apiserver calls the Longhorn admission (9502) and conversion (9503)
+    # webhooks on the longhorn-manager pods. The apiserver runs in the host
+    # netns, so like the iSCSI rule above this arrives from a node IP, not a
+    # pod, and needs an explicit ipBlock.
+    #
+    # This failed *intermittently* before the rule existed: the webhook Service
+    # has one endpoint per node, and same-node host->pod traffic bypasses
+    # kube-router's FORWARD-chain policy enforcement while cross-node traffic
+    # does not. So calls landing on the local manager succeeded and calls
+    # landing on the other node's manager 502'd -- masked further by the
+    # apiserver holding a persistent HTTP/2 connection to whichever endpoint it
+    # picked first. Symptom: "failed calling webhook validator.longhorn.io ...
+    # 502 Bad Gateway" on Longhorn CR writes, appearing and clearing at random.
+    - from:
+        - ipBlock:
+            cidr: 192.168.1.0/24
+      ports:
+        - protocol: TCP
+          port: 9502
+        - protocol: TCP
+          port: 9503
