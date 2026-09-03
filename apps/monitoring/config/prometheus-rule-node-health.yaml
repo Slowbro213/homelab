@@ -9,6 +9,15 @@ spec:
   groups:
     - name: node-health
       rules:
+        - alert: NodeDown
+          expr: up{job="node-exporter"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node unreachable: {{ $labels.instance }}"
+            description: "Prometheus has been unable to scrape node-exporter on {{ $labels.instance }} for at least 2m — the node is likely powered off, crashed, or network-unreachable."
+
         - alert: SmartDiskFailing
           expr: smartctl_device_smart_status == 0
           for: 10m
