@@ -153,6 +153,10 @@ spec:
               - name: "null"
 
           alertmanagerSpec:
+            replicas: 2
+            podAntiAffinity: hard
+            podAntiAffinityTopologyKey: kubernetes.io/hostname
+
             alertmanagerConfigSelector:
               matchLabels:
                 alertmanagerConfig: monitoring-kube-prometheus-alertmanager
