@@ -154,6 +154,15 @@ spec:
         - protocol: TCP
           port: 7777
 
+    # Prometheus scrapes smartctl-exporter
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: smartctl-exporter
+      ports:
+        - protocol: TCP
+          port: 9633
+
     # Prometheus scrapes targets inside this namespace: grafana (3000),
     # kube-state-metrics / prometheus-operator / alertmanager reloader (8080),
     # prometheus (9090) and alertmanager (9093).

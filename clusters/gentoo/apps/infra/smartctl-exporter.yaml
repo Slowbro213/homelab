@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: smartctl-exporter
+  namespace: argocd
+spec:
+  project: infra
+
+  source:
+    repoURL: https://github.com/Slowbro213/homelab.git
+    targetRevision: HEAD
+    path: apps/smartctl-exporter
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: smartctl-exporter
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

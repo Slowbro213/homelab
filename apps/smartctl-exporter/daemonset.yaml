@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: smartctl-exporter
+  labels:
+    app.kubernetes.io/name: smartctl-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: smartctl-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: smartctl-exporter
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: smartctl-exporter
+          image: docker.io/prometheuscommunity/smartctl-exporter:v0.14.0
+          args:
+            - --smartctl.device=/dev/monitored-disk
+          # SMART ioctls (ATA passthrough / NVMe admin commands) need raw
+          # device access; smartctl_exporter's own docs recommend
+          # privileged+root rather than a narrower capability set, since the
+          # exact capabilities needed differ between the ATA and NVMe code
+          # paths. This namespace has no PSS enforce label for that reason
+          # (see apps/security-baseline/namespaces.yaml), same as falco.
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          ports:
+            - name: metrics
+              containerPort: 9633
+          volumeMounts:
+            - name: monitored-disk
+              mountPath: /dev/monitored-disk
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+      volumes:
+        # Stable per-node symlink to the real physical disk (set up via a
+        # udev rule in nixos/hosts/<host>/default.nix), so this DaemonSet
+        # stays identical across nodes instead of branching on hostname/disk
+        # naming. Never resolves to Longhorn's iSCSI virtual disks.
+        - name: monitored-disk
+          hostPath:
+            path: /dev/monitored-disk
+            type: BlockDevice

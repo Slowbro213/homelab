@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: smartctl-exporter
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - smartctl-exporter
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: smartctl-exporter
+  endpoints:
+    - port: metrics
+      interval: 60s
+      path: /metrics
+      # smartctl-exporter isn't hostNetwork, so its own `instance` label is
+      # an ephemeral pod IP with no readable node identity (unlike
+      # node-exporter, which binds HOST_IP directly). Attach the actual node
+      # name so dashboard/alert labels stay stable across pod restarts.
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node

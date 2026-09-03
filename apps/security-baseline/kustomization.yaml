@@ -18,6 +18,7 @@ resources:
   - network-policies/longhorn.yaml
   - network-policies/databases.yaml
   - network-policies/falco.yaml
+  - network-policies/smartctl-exporter.yaml
   - network-policies/gitea.yaml
   - network-policies/gitea-runners.yaml
   - network-policies/authentik.yaml

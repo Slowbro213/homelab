@@ -1,0 +1,388 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-node-health
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  node-health.json: |
+    {
+      "uid": "node-health",
+      "title": "Node Health (PSI & SMART)",
+      "tags": ["node-exporter", "smartctl-exporter", "hardware"],
+      "timezone": "browser",
+      "graphTooltip": 1,
+      "refresh": "1m",
+      "schemaVersion": 39,
+      "version": 1,
+      "time": { "from": "now-6h", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Pressure Stall Information (PSI)",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "CPU Pressure (some, current)",
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 1 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 20 },
+                  { "color": "red", "value": 60 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center"
+          },
+          "targets": [
+            {
+              "expr": "rate(node_pressure_cpu_waiting_seconds_total[5m]) * 100\n* on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}}"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Some Pressure (any task stalled) %",
+          "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "custom": { "fillOpacity": 10, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "rate(node_pressure_cpu_waiting_seconds_total[5m]) * 100\n* on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}} · cpu"
+            },
+            {
+              "expr": "rate(node_pressure_memory_waiting_seconds_total[5m]) * 100\n* on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}} · memory"
+            },
+            {
+              "expr": "rate(node_pressure_io_waiting_seconds_total[5m]) * 100\n* on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}} · io"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Full Pressure (all tasks stalled) %",
+          "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "custom": { "fillOpacity": 10, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "rate(node_pressure_memory_stalled_seconds_total[5m]) * 100\n* on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}} · memory"
+            },
+            {
+              "expr": "rate(node_pressure_io_stalled_seconds_total[5m]) * 100\n* on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}} · io"
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "row",
+          "title": "Disk SMART Health",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 }
+        },
+        {
+          "id": 11,
+          "type": "stat",
+          "title": "SMART Health Status",
+          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 17 },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": { "text": "FAILED", "color": "red" },
+                    "1": { "text": "PASSED", "color": "green" }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "justifyMode": "center"
+          },
+          "targets": [
+            {
+              "expr": "smartctl_device_smart_status",
+              "legendFormat": "{{node}}"
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "type": "stat",
+          "title": "Temperature",
+          "gridPos": { "h": 6, "w": 8, "x": 8, "y": 17 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 55 },
+                  { "color": "red", "value": 65 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "justifyMode": "center"
+          },
+          "targets": [
+            {
+              "expr": "smartctl_device_temperature",
+              "legendFormat": "{{node}}"
+            }
+          ]
+        },
+        {
+          "id": 13,
+          "type": "stat",
+          "title": "Power-On Time",
+          "gridPos": { "h": 6, "w": 8, "x": 16, "y": 17 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "d",
+              "decimals": 1
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "justifyMode": "center"
+          },
+          "targets": [
+            {
+              "expr": "smartctl_device_power_on_seconds / 86400",
+              "legendFormat": "{{node}}"
+            }
+          ]
+        },
+        {
+          "id": 20,
+          "type": "row",
+          "title": "NVMe-Specific Health (cachyos)",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 }
+        },
+        {
+          "id": 21,
+          "type": "stat",
+          "title": "Percentage Used",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 24 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 80 },
+                  { "color": "red", "value": 95 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "justifyMode": "center"
+          },
+          "targets": [
+            { "expr": "smartctl_device_percentage_used", "legendFormat": "{{node}}" }
+          ]
+        },
+        {
+          "id": 22,
+          "type": "stat",
+          "title": "Available Spare",
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 24 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "orange", "value": 10 },
+                  { "color": "green", "value": 50 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "justifyMode": "center"
+          },
+          "targets": [
+            { "expr": "smartctl_device_available_spare", "legendFormat": "{{node}}" }
+          ]
+        },
+        {
+          "id": 23,
+          "type": "stat",
+          "title": "Media Errors",
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 24 },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 1 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "justifyMode": "center"
+          },
+          "targets": [
+            { "expr": "smartctl_device_media_errors", "legendFormat": "{{node}}" }
+          ]
+        },
+        {
+          "id": 24,
+          "type": "stat",
+          "title": "Critical Warning",
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 24 },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 1 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "justifyMode": "center"
+          },
+          "targets": [
+            { "expr": "smartctl_device_critical_warning", "legendFormat": "{{node}}" }
+          ]
+        },
+        {
+          "id": 30,
+          "type": "row",
+          "title": "ATA SMART Attributes (raw values, all nodes)",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 }
+        },
+        {
+          "id": 31,
+          "type": "table",
+          "title": "SMART Attributes",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 31 },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "options": {
+            "showHeader": true
+          },
+          "targets": [
+            {
+              "expr": "smartctl_device_attribute{attribute_value_type=\"raw\"}",
+              "format": "table",
+              "instant": true
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "attribute_value_type": true,
+                  "attribute_flags_long": true,
+                  "attribute_flags_short": true,
+                  "job": true,
+                  "container": true,
+                  "endpoint": true,
+                  "namespace": true,
+                  "pod": true,
+                  "service": true,
+                  "instance": true
+                },
+                "renameByName": {
+                  "Value": "value",
+                  "attribute_name": "attribute",
+                  "attribute_id": "id"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
