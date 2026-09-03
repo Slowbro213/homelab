@@ -4,6 +4,5 @@ resources:
   - prometheus-rule-alertmanager-test.yaml
   - prometheus-rule-node-health.yaml
   - alertmanagerconfig-discord.yaml
-  - grafana-dashboard-node-temperatures.yaml
   - grafana-dashboard-node-health.yaml
   - servicemonitor-smartctl-exporter.yaml

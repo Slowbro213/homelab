@@ -17,25 +17,9 @@ spec:
       containers:
         - name: smartctl-exporter
           image: docker.io/prometheuscommunity/smartctl-exporter:v0.14.0
-          # smartctl can't auto-detect device type ("-d auto") through an
-          # arbitrarily-named path — its heuristics key off conventional
-          # names like /dev/nvme* or /dev/sd*, which /dev/monitored-disk
-          # deliberately isn't. Passing both known types is safe (unlike
-          # guessing across the iSCSI virtual disks): each points at the
-          # same already-verified real disk, so the mismatched probe just
-          # fails fast with a clean protocol error, never a slow/hung scan.
           args:
             - --smartctl.device=/dev/monitored-disk;nvme
             - --smartctl.device=/dev/monitored-disk;sat
-          # SMART ioctls (ATA passthrough / NVMe admin commands) need raw
-          # device access; smartctl_exporter's own docs recommend
-          # privileged+root rather than a narrower capability set, since the
-          # exact capabilities needed differ between the ATA and NVMe code
-          # paths. This namespace has no PSS enforce label for that reason
-          # (see apps/security-baseline/namespaces.yaml), and is also on the
-          # cluster-wide Kyverno restricted-policy Audit override list
-          # (clusters/gentoo/apps/infra/kyverno/kyverno-policies.yaml), same
-          # as falco.
           securityContext:
             privileged: true
             runAsUser: 0
@@ -54,10 +38,6 @@ spec:
             limits:
               memory: 64Mi
       volumes:
-        # Stable per-node symlink to the real physical disk (set up via a
-        # udev rule in nixos/hosts/<host>/default.nix), so this DaemonSet
-        # stays identical across nodes instead of branching on hostname/disk
-        # naming. Never resolves to Longhorn's iSCSI virtual disks.
         - name: monitored-disk
           hostPath:
             path: /dev/monitored-disk

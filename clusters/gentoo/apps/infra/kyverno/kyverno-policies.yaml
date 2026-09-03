@@ -44,8 +44,6 @@ spec:
                 - longhorn-system
                 - tailscale
                 - falco
-                # smartctl needs privileged + root + a custom seccomp
-                # profile for raw SMART ioctls, same reason as falco.
                 - smartctl-exporter
         policyExclude:
           disallow-capabilities-strict:

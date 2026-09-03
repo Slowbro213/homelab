@@ -168,8 +168,6 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  # No enforce label (like falco): smartctl needs privileged + root to issue
-  # SMART ioctls against /dev/monitored-disk.
   name: smartctl-exporter
   labels:
     pod-security.kubernetes.io/audit: restricted

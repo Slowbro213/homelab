@@ -9,7 +9,7 @@ data:
   node-health.json: |
     {
       "uid": "node-health",
-      "title": "Node Health (PSI & SMART)",
+      "title": "Node Health",
       "tags": ["node-exporter", "smartctl-exporter", "hardware"],
       "timezone": "browser",
       "graphTooltip": 1,
@@ -19,16 +19,93 @@ data:
       "time": { "from": "now-6h", "to": "now" },
       "panels": [
         {
+          "id": 40,
+          "type": "row",
+          "title": "Temperatures",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+        },
+        {
+          "id": 41,
+          "type": "stat",
+          "title": "CPU / Core Temperature (current max per node)",
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 1 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 75 },
+                  { "color": "red", "value": 90 }
+                ]
+              }
+            }
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "orientation": "horizontal",
+            "textMode": "auto",
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "center"
+          },
+          "targets": [
+            {
+              "expr": "max by (nodename) (\n  node_hwmon_temp_celsius\n  * on(chip, instance) group_left(chip_name) node_hwmon_chip_names{chip_name=~\"k10temp|coretemp\"}\n  * on(instance) group_left(nodename) node_uname_info\n)",
+              "legendFormat": "{{nodename}}"
+            }
+          ]
+        },
+        {
+          "id": 42,
+          "type": "timeseries",
+          "title": "CPU / Core Temperature",
+          "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "custom": { "fillOpacity": 10, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "node_hwmon_temp_celsius\n* on(chip, instance) group_left(chip_name) node_hwmon_chip_names{chip_name=~\"k10temp|coretemp\"}\n* on(chip, sensor, instance) group_left(label) node_hwmon_sensor_label\n* on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}} · {{label}}"
+            }
+          ]
+        },
+        {
+          "id": 43,
+          "type": "timeseries",
+          "title": "All Hardware Sensors (CPU, GPU, NVMe, ACPI, ...)",
+          "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "celsius",
+              "custom": { "fillOpacity": 10, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "node_hwmon_temp_celsius\n* on(chip, instance) group_left(chip_name) node_hwmon_chip_names\n* on(instance) group_left(nodename) node_uname_info",
+              "legendFormat": "{{nodename}} · {{chip_name}} ({{sensor}})"
+            }
+          ]
+        },
+        {
           "id": 1,
           "type": "row",
           "title": "Pressure Stall Information (PSI)",
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 }
         },
         {
           "id": 2,
           "type": "stat",
           "title": "CPU Pressure (some, current)",
-          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 1 },
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 17 },
           "fieldConfig": {
             "defaults": {
               "unit": "percent",
@@ -63,7 +140,7 @@ data:
           "id": 3,
           "type": "timeseries",
           "title": "Some Pressure (any task stalled) %",
-          "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
+          "gridPos": { "h": 9, "w": 12, "x": 0, "y": 23 },
           "fieldConfig": {
             "defaults": {
               "unit": "percent",
@@ -91,7 +168,7 @@ data:
           "id": 4,
           "type": "timeseries",
           "title": "Full Pressure (all tasks stalled) %",
-          "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
+          "gridPos": { "h": 9, "w": 12, "x": 12, "y": 23 },
           "fieldConfig": {
             "defaults": {
               "unit": "percent",
@@ -115,13 +192,13 @@ data:
           "id": 10,
           "type": "row",
           "title": "Disk SMART Health",
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 }
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 }
         },
         {
           "id": 11,
           "type": "stat",
           "title": "SMART Health Status",
-          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 17 },
+          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 33 },
           "fieldConfig": {
             "defaults": {
               "mappings": [
@@ -160,7 +237,7 @@ data:
           "id": 12,
           "type": "stat",
           "title": "Temperature",
-          "gridPos": { "h": 6, "w": 8, "x": 8, "y": 17 },
+          "gridPos": { "h": 6, "w": 8, "x": 8, "y": 33 },
           "fieldConfig": {
             "defaults": {
               "unit": "celsius",
@@ -192,7 +269,7 @@ data:
           "id": 13,
           "type": "stat",
           "title": "Power-On Time",
-          "gridPos": { "h": 6, "w": 8, "x": 16, "y": 17 },
+          "gridPos": { "h": 6, "w": 8, "x": 16, "y": 33 },
           "fieldConfig": {
             "defaults": {
               "unit": "d",
@@ -217,13 +294,13 @@ data:
           "id": 20,
           "type": "row",
           "title": "NVMe-Specific Health (cachyos)",
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 }
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 }
         },
         {
           "id": 21,
           "type": "stat",
           "title": "Percentage Used",
-          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 24 },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 40 },
           "fieldConfig": {
             "defaults": {
               "unit": "percent",
@@ -254,7 +331,7 @@ data:
           "id": 22,
           "type": "stat",
           "title": "Available Spare",
-          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 24 },
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 40 },
           "fieldConfig": {
             "defaults": {
               "unit": "percent",
@@ -285,7 +362,7 @@ data:
           "id": 23,
           "type": "stat",
           "title": "Media Errors",
-          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 24 },
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 40 },
           "fieldConfig": {
             "defaults": {
               "thresholds": {
@@ -312,7 +389,7 @@ data:
           "id": 24,
           "type": "stat",
           "title": "Critical Warning",
-          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 24 },
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 40 },
           "fieldConfig": {
             "defaults": {
               "thresholds": {
@@ -339,13 +416,13 @@ data:
           "id": 30,
           "type": "row",
           "title": "ATA SMART Attributes (raw values, all nodes)",
-          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 }
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 46 }
         },
         {
           "id": 31,
           "type": "table",
           "title": "SMART Attributes",
-          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 31 },
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 47 },
           "fieldConfig": { "defaults": {}, "overrides": [] },
           "options": {
             "showHeader": true
