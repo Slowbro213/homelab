@@ -24,10 +24,15 @@ spec:
           # privileged+root rather than a narrower capability set, since the
           # exact capabilities needed differ between the ATA and NVMe code
           # paths. This namespace has no PSS enforce label for that reason
-          # (see apps/security-baseline/namespaces.yaml), same as falco.
+          # (see apps/security-baseline/namespaces.yaml), and is also on the
+          # cluster-wide Kyverno restricted-policy Audit override list
+          # (clusters/gentoo/apps/infra/kyverno/kyverno-policies.yaml), same
+          # as falco.
           securityContext:
             privileged: true
             runAsUser: 0
+            seccompProfile:
+              type: RuntimeDefault
           ports:
             - name: metrics
               containerPort: 9633
