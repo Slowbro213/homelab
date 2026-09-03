@@ -26,6 +26,20 @@ spec:
           defaultSettings:
             createDefaultDiskLabeledNodes: true
             defaultDataPath: /var/lib/longhorn
+            # Replica *placement* also depends on per-node Longhorn state that this
+            # chart cannot express: Node CRs are created by the Longhorn manager,
+            # not Argo, so selfHeal neither sets nor reverts them. Both nodes need
+            # spec.allowScheduling=true and spec.evictionRequested=false, at BOTH
+            # node and disk level, or every replica piles onto whichever node is
+            # left schedulable.
+            #
+            # tux (registry.gentoo.lan) had been drained exactly that way
+            # (allowScheduling=false + evictionRequested=true), which put all 14
+            # single replicas on cachyos's NVMe -- ~69 GB/day of writes onto one
+            # disk, with pods on tux reaching their data over WiFi. Re-enabled and
+            # the tux-attached volumes migrated back on 2026-09-03. Verify with:
+            #   kubectl -n longhorn-system get nodes.longhorn.io -o custom-columns=\
+            #     N:.metadata.name,SCHED:.spec.allowScheduling,EVICT:.spec.evictionRequested
             defaultReplicaCount: 1
             storageMinimalAvailablePercentage: 15
             # 200% over-provisioning: nominal PVC sizes (~157Gi/node across all
