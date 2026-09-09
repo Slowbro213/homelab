@@ -228,6 +228,7 @@ spec:
   # less-trusted app repo) deploy Secrets/Deployments into ANY namespace, including
   # sensitive ones like vault/argocd. Scoped to the namespaces the two current
   # frontend apps actually use; add a new namespace here when onboarding another one.
+  # (Three now: programmingclub, cntdwn and spyal.)
   sourceRepos:
     - https://git.thanaspapa.com/thanas-papa/*
     - https://github.com/Slowbro213/homelab.git
@@ -236,6 +237,8 @@ spec:
       namespace: programmingclub
     - server: https://kubernetes.default.svc
       namespace: cntdwn
+    - server: https://kubernetes.default.svc
+      namespace: spyal
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace

@@ -4,5 +4,6 @@ kind: Kustomization
 resources:
   - cluster.yaml
   - database-programmingclub.yaml
+  - database-spyal.yaml
   - scheduled-backup.yaml
   - objectstore.yaml

@@ -31,6 +31,19 @@ spec:
         connectionLimit: -1
         passwordSecret:
           name: programmingclub-db
+      # Owner of the `spyal` database (see database-spyal.yaml). Same shape as
+      # pclub above: password from Vault via the spyal-db VaultStaticSecret in
+      # this namespace, CNPG defaults spelled out for the same OutOfSync reason.
+      - name: spyal
+        ensure: present
+        login: true
+        superuser: false
+        createdb: false
+        createrole: false
+        inherit: true
+        connectionLimit: -1
+        passwordSecret:
+          name: spyal-db
   postgresql:
     pg_hba:
       - hostnossl all all all reject

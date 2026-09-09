@@ -27,5 +27,6 @@ resources:
   - network-policies/velero.yaml
   - resource-limits/cntdwn.yaml
   - resource-limits/programmingclub.yaml
+  - resource-limits/spyal.yaml
   - resource-limits/whoami.yaml
   - resource-limits/velero.yaml

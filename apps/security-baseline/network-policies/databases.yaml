@@ -117,6 +117,15 @@ spec:
         - protocol: TCP
           port: 5432
 
+    # Spyal application database access
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: spyal
+      ports:
+        - protocol: TCP
+          port: 5432
+
     # CNPG replication between pods
     - from:
         - podSelector:

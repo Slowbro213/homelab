@@ -44,6 +44,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: programmingclub
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: spyal
       ports:
         - protocol: TCP
           port: 6379

@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # The name must stay `spyal`: the app's Gitea Actions workflow writes
+  # deploy/k8s/.argocd-source-spyal.yaml, and Argo CD only picks that override up
+  # when the filename matches the Application name. The repo itself is `Spyal`.
+  name: spyal
+  namespace: argocd
+spec:
+  project: frontends
+
+  source:
+    repoURL: https://git.thanaspapa.com/thanas-papa/Spyal.git
+    targetRevision: main
+    path: deploy/k8s
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: spyal
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
