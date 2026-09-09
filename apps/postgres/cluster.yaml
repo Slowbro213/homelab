@@ -34,6 +34,20 @@ spec:
       # Owner of the `spyal` database (see database-spyal.yaml). Same shape as
       # pclub above: password from Vault via the spyal-db VaultStaticSecret in
       # this namespace, CNPG defaults spelled out for the same OutOfSync reason.
+      #
+      # Ordering hazard when adding a role here: the operator only grants the
+      # instance manager's Role `get` on the new passwordSecret *by name* as
+      # part of reconciling this spec. If the Secret does not exist yet (it is
+      # created by a different Argo Application, apps/secrets/vault-sync, so
+      # sync waves do not order the two), the reconciliation reads it, gets
+      # `secrets "<name>" is forbidden`, and creates the role with NO password —
+      # then marks it reconciled and does not retry. Postgres then rejects the
+      # app with `password authentication failed ... has no password assigned`.
+      # Recover by touching the *Cluster* — managed-role reconciliation hangs off
+      # this object, not off the Secret, so annotating the Secret does nothing:
+      #   kubectl -n databases annotate cluster postgres-ha nudge="$(date +%s)" --overwrite
+      # Confirmed applied when .status.managedRolesStatus.passwordStatus.<role>
+      # gains a resourceVersion (a bare transactionID means no password was set).
       - name: spyal
         ensure: present
         login: true
