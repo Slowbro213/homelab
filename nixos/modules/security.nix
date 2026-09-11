@@ -14,7 +14,7 @@
     maxretry = 5;
   };
 
-  security.apparmor.enable = true;  # NixOS-supported LSM (SELinux is not the NixOS default path)
+  security.apparmor.enable = true;
 
   systemd.coredump.enable = false;
   security.pam.loginLimits = [
