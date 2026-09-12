@@ -101,6 +101,11 @@ spec:
             - name: internal-ca
               mountPath: /etc/ssl/gentoo
               readOnly: true
+            # pgAdmin/libpq falls back to this standard location when a server
+            # definition does not retain an absolute sslrootcert path.
+            - name: postgres-ca
+              mountPath: /home/pgadmin/.postgresql
+              readOnly: true
       volumes:
         - name: data
           persistentVolumeClaim:
@@ -114,3 +119,9 @@ spec:
         - name: internal-ca
           secret:
             secretName: gentoo-internal-ca-bundle
+        - name: postgres-ca
+          secret:
+            secretName: gentoo-internal-ca-bundle
+            items:
+              - key: ca.crt
+                path: root.crt
