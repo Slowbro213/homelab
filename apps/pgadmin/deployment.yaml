@@ -62,14 +62,21 @@ spec:
             httpGet:
               path: /misc/ping
               port: http
-            initialDelaySeconds: 10
+            timeoutSeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /misc/ping
               port: http
-            initialDelaySeconds: 30
+            timeoutSeconds: 5
             periodSeconds: 30
+          startupProbe:
+            httpGet:
+              path: /misc/ping
+              port: http
+            timeoutSeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
