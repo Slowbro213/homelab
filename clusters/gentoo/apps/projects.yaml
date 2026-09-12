@@ -100,6 +100,8 @@ spec:
       namespace: nats
     - server: https://kubernetes.default.svc
       namespace: velero
+    - server: https://kubernetes.default.svc
+      namespace: pgadmin
   clusterResourceWhitelist:
     - group: admissionregistration.k8s.io
       kind: MutatingWebhookConfiguration
