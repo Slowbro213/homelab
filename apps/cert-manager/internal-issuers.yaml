@@ -14,9 +14,12 @@ spec:
   isCA: true
   commonName: gentoo-internal-ca
   secretName: gentoo-internal-ca
+  duration: 87600h
+  renewBefore: 720h
   privateKey:
     algorithm: ECDSA
     size: 256
+    rotationPolicy: Never
   issuerRef:
     name: gentoo-selfsigned
     kind: ClusterIssuer
