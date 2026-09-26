@@ -106,8 +106,12 @@ reconciles those against each other. If cert-manager ever regenerates the CA wit
 Fix by restoring the original Secret (delete the `Certificate` first, apply the Secret, then let
 Argo recreate the `Certificate` so cert-manager *adopts* it instead of reissuing, and delete the
 leaf Secrets of the 8 Certificates using the `gentoo-internal-ca` ClusterIssuer so they re-chain),
-or by updating the asset and rebuilding both nodes. Routine 90-day renewal is safe — cert-manager
-reuses the key.
+or by updating the asset and rebuilding both nodes. The CA Certificate pins
+`privateKey.rotationPolicy: Never` with a 10-year `duration` (cert-manager ≥1.18 defaults to
+`Always`, which silently rotated the key on the 90-day renewal of 2026-09-20). After re-chaining
+leaves, Vault needs `kill -HUP $(pidof vault)` in each pod (PID 1 is a shell that ignores HUP —
+don't restart, it reseals), and clients that load the CA once at startup (VSO, gitea-runner,
+authentik, image-updater, spyal) need a restart.
 
 ## Networking / exposure
 
