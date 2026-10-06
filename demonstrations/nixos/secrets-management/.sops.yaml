@@ -1,0 +1,15 @@
+keys:
+  - &us age1xz5s5yaqyvam6uhe3a0j98790l8ckvw2cem498l5vjlyc2t24snqhyd9dc
+  - &vm-a age17ckhk6w3ayx59t585yamfrajvk3t9nl20xd38xzv6454jy7n0f6sxrwq2l
+  - &vm-b age10nq3z9zd9dd222fxr58g664eg4cus64jn6s6krm2nptsfwry8u9srzeq6g
+creation_rules:
+  - path_regex: secrets/demo\.yaml$
+    key_groups:
+      - age: [*us, *vm-a, *vm-b]
+  - path_regex: secrets/hosts/vm-a\.yaml$
+    key_groups:
+      - age: [*us, *vm-a]
+  - path_regex: secrets/hosts/vm-b\.yaml$
+    key_groups:
+      - age: [*us, *vm-b]
+

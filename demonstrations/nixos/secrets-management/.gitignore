@@ -1,0 +1,3 @@
+# QEMU / nix build artifacts
+result*
+*.qcow2
