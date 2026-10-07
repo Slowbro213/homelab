@@ -293,7 +293,7 @@ Writing superblocks and filesystem accounting information: done
 Virtualisation disk image created.
 ```
 
-This will hopefully have created a VM window on your screen. Now that you're inside `vm-a`, there should hopefully be a `/run/secrets` directory which contains what we gave it. Try the following:
+This will have hopefully created a VM window on your screen. Now that you're inside `vm-a`, there should hopefully be a `/run/secrets` directory which contains what we gave it. Try the following:
 
 ```bash
 ls /run/secrets
