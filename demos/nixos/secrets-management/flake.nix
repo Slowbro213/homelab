@@ -33,7 +33,6 @@
       ];
 
       shellHook = ''
-        export SOPS_AGE_KEY_FILE="$PWD/keys/admin.txt"
         echo "You've entered the dev environment for the sops-nix secrets demo!"
       '';
     };

@@ -12,7 +12,7 @@ You should see something like:
 ❯ nix develop
 You've entered the dev environment for the sops-nix secrets demo!
 
-[slowking@nixos:~/Github/homelab/demonstrations/nixos/secrets-management]$
+[slowking@nixos:~/Github/homelab/demos/nixos/secrets-management]$
 ```
 
 Next, we need to create an age key for sops to use on our local machine:
@@ -24,7 +24,7 @@ age-keygen -o keys/admin.txt
 It should look like:
 
 ```bash
-[slowking@nixos:~/Github/homelab/demonstrations/nixos/secrets-management]$ age-keygen -o keys/admin.txt
+[slowking@nixos:~/Github/homelab/demos/nixos/secrets-management]$ age-keygen -o keys/admin.txt
 Public key: age1xz5s5yaqyvam6uhe3a0j98790l8ckvw2cem498l5vjlyc2t24snqhyd9dc
 ```
 
@@ -38,7 +38,7 @@ ssh-keygen -t ed25519 -f keys/vm-b -N '' -C vm-b-host
 This should have printed a result like:
 
 ```bash
-[slowking@nixos:~/Github/homelab/demonstrations/nixos/secrets-management]$ ssh-keygen -t ed25519 -f keys/vm-a -N '' -C vm-a-host
+[slowking@nixos:~/Github/homelab/demos/nixos/secrets-management]$ ssh-keygen -t ed25519 -f keys/vm-a -N '' -C vm-a-host
 Generating public/private ed25519 key pair.
 Your identification has been saved in keys/vm-a
 Your public key has been saved in keys/vm-a.pub
@@ -57,7 +57,7 @@ The key's randomart image is:
 |       .o oo...  |
 +----[SHA256]-----+
 
-[slowking@nixos:~/Github/homelab/demonstrations/nixos/secrets-management]$ ssh-keygen -t ed25519 -f keys/vm-b -N '' -C vm-b-host
+[slowking@nixos:~/Github/homelab/demos/nixos/secrets-management]$ ssh-keygen -t ed25519 -f keys/vm-b -N '' -C vm-b-host
 Generating public/private ed25519 key pair.
 Your identification has been saved in keys/vm-b
 Your public key has been saved in keys/vm-b.pub
@@ -90,16 +90,16 @@ ssh-to-age -i keys/vm-b.pub # Same thing here but for the other node
 The result should look like:
 
 ```bash
-[slowking@nixos:~/Github/homelab/demonstrations/nixos/secrets-management]$  age-keygen -y keys/admin.txt
+[slowking@nixos:~/Github/homelab/demos/nixos/secrets-management]$  age-keygen -y keys/admin.txt
 age1xz5s5yaqyvam6uhe3a0j98790l8ckvw2cem498l5vjlyc2t24snqhyd9dc
 
-[slowking@nixos:~/Github/homelab/demonstrations/nixos/secrets-management]$ ssh-to-age -i keys/
+[slowking@nixos:~/Github/homelab/demos/nixos/secrets-management]$ ssh-to-age -i keys/
 admin.txt   .gitignore  vm-a        vm-a.pub    vm-b        vm-b.pub
 
-[slowking@nixos:~/Github/homelab/demonstrations/nixos/secrets-management]$ ssh-to-age -i keys/vm-a.pub
+[slowking@nixos:~/Github/homelab/demos/nixos/secrets-management]$ ssh-to-age -i keys/vm-a.pub
 age17ckhk6w3ayx59t585yamfrajvk3t9nl20xd38xzv6454jy7n0f6sxrwq2l
 
-[slowking@nixos:~/Github/homelab/demonstrations/nixos/secrets-management]$ ssh-to-age -i keys/vm-b.pub
+[slowking@nixos:~/Github/homelab/demos/nixos/secrets-management]$ ssh-to-age -i keys/vm-b.pub
 age10nq3z9zd9dd222fxr58g664eg4cus64jn6s6krm2nptsfwry8u9srzeq6g
 ```
 
