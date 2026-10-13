@@ -8,11 +8,6 @@
     "mitigations=off"
   ];
 
-  powerManagement.enable = true;
-  powerManagement.cpuFreqGovernor = "performance";
-  services.power-profiles-daemon.enable = lib.mkForce false;
-  services.tlp.enable = lib.mkForce false;
-
   zramSwap = {
     enable = true;
     algorithm = "zstd";

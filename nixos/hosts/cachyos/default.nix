@@ -1,18 +1,14 @@
 { ... }:
 {
-  imports = [ ../../modules/k3s-server.nix ];
+  imports = [
+    ../../modules/k3s-server.nix
+    ../../modules/laptop.nix
+  ];
 
   networking.hostName = "cachyos";
   homelab.node = {
     wifiInterface = "wlan0";
     ipv4 = "192.168.1.31";
-  };
-
-  # Sole control plane — a closed lid must not suspend the node.
-  services.logind.settings.Login = {
-    HandleLidSwitch = "ignore";
-    HandleLidSwitchExternalPower = "ignore";
-    HandleLidSwitchDocked = "ignore";
   };
 
   # Stable node-agnostic path to the real physical disk (as opposed to the
