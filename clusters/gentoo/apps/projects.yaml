@@ -230,7 +230,7 @@ spec:
   # less-trusted app repo) deploy Secrets/Deployments into ANY namespace, including
   # sensitive ones like vault/argocd. Scoped to the namespaces the two current
   # frontend apps actually use; add a new namespace here when onboarding another one.
-  # (Three now: programmingclub, cntdwn and spyal.)
+  # (Four now: programmingclub, cntdwn, spyal and photocheck.)
   sourceRepos:
     - https://git.thanaspapa.com/thanas-papa/*
     - https://github.com/Slowbro213/homelab.git
@@ -241,6 +241,8 @@ spec:
       namespace: cntdwn
     - server: https://kubernetes.default.svc
       namespace: spyal
+    - server: https://kubernetes.default.svc
+      namespace: photocheck
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -256,6 +258,9 @@ spec:
       kind: PersistentVolumeClaim
     - group: apps
       kind: Deployment
+    # photocheck copies its model and ONNX Runtime onto a volume with a one-off Job.
+    - group: batch
+      kind: Job
     - group: networking.k8s.io
       kind: Ingress
     - group: networking.k8s.io
