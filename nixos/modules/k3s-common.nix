@@ -2,7 +2,7 @@
 {
   services.openiscsi = {
     enable = true;
-    name = "iqn.2020-01.io.homelab:node";  # stable initiator name for Longhorn
+    name = "iqn.2020-01.io.homelab:${config.networking.hostName}";  # stable, unique initiator name per node for Longhorn
   };
 
   # Longhorn runtime deps.
