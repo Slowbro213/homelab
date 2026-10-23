@@ -168,8 +168,9 @@ instead.
 
 ## The live cluster ("gentoo")
 
-Two nodes, both running **NixOS 25.11** (systemd), k3s `v1.34.5+k3s1`. Reach them directly by
-SSH as `slowking` with key `-i ~/.ssh/id_ed25519` (no jump host, no login password). The old
+Two nodes, both running **NixOS 26.05** (systemd), k3s `v1.35.6+k3s1` (verified 2026-10-21).
+Reach them directly by SSH as `slowking` with key `-i ~/.ssh/id_ed25519` (no jump host, no
+login password). The old
 `cachyos-x8664` / bare `tux` / `cachyos` SSH aliases are **defunct — use the IPs**:
 
 - **`ssh slowking@192.168.1.31`** — control-plane node, hostname `cachyos` (8 cores / 13Gi RAM,
@@ -254,6 +255,73 @@ would flood the main conversation — e.g. paging through many pods' logs, or a 
 multi-resource audit across namespaces — and even then keep the delegated task narrow (one
 specific question, a capped set of commands) so the agent comes back with a short answer
 instead of a wall of raw output.
+
+### Recovery notes verified 2026-10-21
+
+- This workstation's default SSH config can fail with `Bad owner or permissions` from a Nix
+  store SSH include. For node operations, bypass that config explicitly:
+  `ssh -F /dev/null -i ~/.ssh/id_ed25519 slowking@192.168.1.31`. Use the IPs above; run all
+  cluster-wide `kubectl` commands on the control-plane node.
+- `.env` follows `.env.example` and contains `VAULT_ROOT_TOKEN` plus five Shamir shares. Vault
+  currently uses a 3-of-5 threshold. Keep `.env` mode `0600`; never print a share or pass one as
+  a shell/CLI argument. A nested `ssh -t` + `kubectl exec -it` can echo input even when both
+  outer and inner `stty -echo` are attempted.
+- Vault sealing is per pod. After the worker returns, `vault-0` may remain the unsealed raft
+  leader while `vault-1` starts sealed. Check each pod with
+  `kubectl -n vault exec <pod> -- env VAULT_SKIP_VERIFY=true vault status -format=json`;
+  the skip is needed for this diagnostic because the local listener certificate has no IP SAN.
+  To unseal a pod, keep a port-forward to that pod open on the control-plane node, then POST
+  each of three distinct shares as JSON on stdin to `/v1/sys/unseal`:
+
+  ```sh
+  # In one terminal, keep this SSH port-forward running:
+  ssh -F /dev/null -i ~/.ssh/id_ed25519 slowking@192.168.1.31 \
+    'kubectl -n vault port-forward pod/vault-1 18200:8200 --address 127.0.0.1'
+
+  # In another workstation terminal; repeat for shares 2 and 3:
+  set -a; source .env; set +a
+  python3 -c 'import json,os; print(json.dumps({"key":os.environ["VAULT_UNSEAL_KEY_1"]}))' \
+    | ssh -F /dev/null -i ~/.ssh/id_ed25519 slowking@192.168.1.31 \
+      'curl -ksS --max-time 20 -X PUT --data-binary @- https://127.0.0.1:18200/v1/sys/unseal'
+  ```
+
+  Do not enter shares through nested TTYs or put them in command arguments. Confirm the target
+  reports `sealed: false`, both Vault pods are Ready, `vault operator raft list-peers` shows a
+  leader and follower, and the Argo CD `vault` Application is `Synced/Healthy`. Unsealing uses
+  the existing shares; it is separate from rekeying. One share was echoed during the 2026-10-21
+  recovery; no shares were rotated, per the user's instruction.
+- After the 2026-10-21 tux recovery, both k3s nodes, all Argo CD Applications, all controllers,
+  both Vault replicas, and active Longhorn volumes recovered. A focused health pass had no
+  failures. The full pass also reported fresh container restarts and Warning events from the
+  worker's return; controllers reconciled and became ready, while event records may remain
+  until they age out. One unresolved data volume remains:
+  PV `pvc-8e3e7a51-be84-48d7-91c1-539a14cc8828` is `Released` with reclaim policy `Retain`,
+  detached, and belonged to the old `databases/postgres-ha-8` claim. Current Postgres instances
+  `4`, `7`, and `9` are healthy (3/3). Its Longhorn snapshot is not ready; treat this 20-GiB
+  volume as potentially valuable and do not delete it without verifying it is disposable.
+
+### Node configuration rollout verified 2026-10-21
+
+- Build the pinned `nixos/` flake for both hosts before switching; preserve `flake.lock`.
+  Remote rebuilds work with
+  `NIX_SSHOPTS="-F /dev/null -i $HOME/.ssh/gentoo_deploy_ed25519 -o BatchMode=yes"`.
+  Use the `deploy` account and remote sudo; no `.env` password or interactive TTY is needed.
+  Run `dry-activate`, then `switch`, one host at a time (tux before cachyos), and verify
+  `/run/current-system` and `/nix/var/nix/profiles/system` resolve to the built output.
+- The rollout installed tux generation 14 and cachyos generation 17. Each now has a unique
+  configured iSCSI initiator (`iqn.2020-01.io.homelab:<hostname>`). Existing storage sessions
+  stayed connected; k3s, iscsid, and WiFi did not restart. Do not force iSCSI logouts merely
+  to replace the identity on existing sessions.
+- For `scripts/cluster-health-check.sh`, override its defunct host aliases with
+  `CONTROL_NODE=192.168.1.31 WORKER_NODES=192.168.1.25`, and use an SSH wrapper adding
+  `-F /dev/null`. The focused checks `nodes,api,resources,os,argocd,controllers,certs`
+  passed 154 checks. Compare restart counters and Warning-event counts against a deployment
+  baseline: the full report still flags the earlier shutdown's historical events/restarts.
+  Six samples over five minutes after this rollout found no new restarts, Warning events,
+  readiness failures, or attached-volume degradation; both Vault replicas stayed unsealed.
+- Prometheus had pre-existing `KubeCPUOvercommit` and `KubeMemoryOvercommit` warnings;
+  actual node use was below health-check thresholds. The retained old Postgres volume noted
+  above remains untouched. No secrets, credentials, or encryption keys were rotated.
 
 ## Git commit conventions
 

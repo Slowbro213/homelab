@@ -39,7 +39,7 @@
     mirrors:
       registry.gentoo.lan:
         endpoint:
-          - "http://registry.gentoo.lan"
+          - "https://registry.gentoo.lan"
     configs:
       "registry.gentoo.lan":
         auth:

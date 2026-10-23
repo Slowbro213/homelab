@@ -311,7 +311,7 @@ During evaluation, `sops.placeholder` produces a marker. During secret installat
 
 K3s reads this registry configuration at startup to generate containerd configuration. A registry change therefore needs a k3s restart on each affected node. The current template and secret declarations do not specify `restartUnits`, so a password-only edit must not be assumed to cause a restart. Other unit changes during the same rebuild might cause one. A possible future explicit hook is `sops.templates."registries.yaml".restartUnits = [ "k3s.service" ];`, after confirming the unit name in the deployed generation. No such change was made for this guide. See [K3s private-registry documentation](https://docs.k3s.io/installation/private-registry).
 
-The checked-in mirror endpoint is explicitly `http://registry.gentoo.lan`. The same file also specifies a CA certificate. A CA setting does not turn an HTTP endpoint into HTTPS; its presence alone is not proof that the configured mirror connection encrypts credentials in transit. Actual redirects or fallback behavior require runtime inspection.
+The checked-in mirror endpoint is `https://registry.gentoo.lan`. The same file pins the internal CA used to verify its certificate. Check the live endpoint and image pulls after a deployment; the checked-in configuration alone does not prove the running nodes have loaded it.
 
 The CA certificate is public trust material committed at `assets/gentoo-internal-ca.crt`. It is not the CA private key. Repository operations notes say this pinned copy must stay consistent with the cluster's internal CA.
 
