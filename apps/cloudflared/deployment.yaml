@@ -7,6 +7,11 @@ metadata:
     app.kubernetes.io/name: cloudflared
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: cloudflared
@@ -24,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: cloudflared
-          image: cloudflare/cloudflared:2026.5.0
+          image: cloudflare/cloudflared:2026.10.3
           imagePullPolicy: IfNotPresent
           command:
             - cloudflared
