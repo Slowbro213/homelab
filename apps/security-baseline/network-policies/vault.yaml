@@ -2,6 +2,8 @@
 # Namespace: vault
 # ============================================================
 
+# Policy semantics: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -53,6 +55,34 @@ spec:
       ports:
         - protocol: TCP
           port: 8201
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-vault-injector-egress
+  namespace: vault
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vault-agent-injector
+      component: webhook
+  policyTypes:
+    - Egress
+  egress:
+    # Auto-TLS watches and updates the injector's webhook configuration.
+    - to:
+        - ipBlock:
+            cidr: 10.43.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+    # Also allow the API endpoint after Service destination NAT.
+    - to:
+        - ipBlock:
+            cidr: 192.168.1.31/32
+      ports:
+        - protocol: TCP
+          port: 6443
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
