@@ -230,7 +230,7 @@ spec:
   # less-trusted app repo) deploy Secrets/Deployments into ANY namespace, including
   # sensitive ones like vault/argocd. Scoped to the namespaces the two current
   # frontend apps actually use; add a new namespace here when onboarding another one.
-  # (Four now: programmingclub, cntdwn, spyal and photocheck.)
+  # (Five now: programmingclub, cntdwn, spyal, photocheck and chess.)
   sourceRepos:
     - https://git.thanaspapa.com/thanas-papa/*
     - https://github.com/Slowbro213/homelab.git
@@ -243,6 +243,8 @@ spec:
       namespace: spyal
     - server: https://kubernetes.default.svc
       namespace: photocheck
+    - server: https://kubernetes.default.svc
+      namespace: chess
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace

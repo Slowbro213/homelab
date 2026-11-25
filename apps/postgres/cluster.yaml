@@ -58,6 +58,18 @@ spec:
         connectionLimit: -1
         passwordSecret:
           name: spyal-db
+      # Owner of the `chess` database (see database-chess.yaml). Same shape as
+      # spyal; mind the ordering hazard described above it.
+      - name: chess
+        ensure: present
+        login: true
+        superuser: false
+        createdb: false
+        createrole: false
+        inherit: true
+        connectionLimit: -1
+        passwordSecret:
+          name: chess-db
       # Administrative login used only by the tailnet-only pgAdmin deployment.
       # The credential is generated in Vault and synced independently into the
       # databases and pgadmin namespaces.

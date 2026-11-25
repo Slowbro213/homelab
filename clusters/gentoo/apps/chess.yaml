@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # The name must stay `chess`: the app's Gitea Actions workflow writes
+  # deploy/k8s/.argocd-source-chess.yaml, and Argo CD only picks that override up
+  # when the filename matches the Application name.
+  name: chess
+  namespace: argocd
+spec:
+  project: frontends
+
+  source:
+    repoURL: https://git.thanaspapa.com/thanas-papa/chess.git
+    targetRevision: main
+    path: deploy/k8s
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: chess
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

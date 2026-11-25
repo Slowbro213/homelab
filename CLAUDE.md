@@ -111,7 +111,7 @@ or by updating the asset and rebuilding both nodes. The CA Certificate pins
 `Always`, which silently rotated the key on the 90-day renewal of 2026-09-20). After re-chaining
 leaves, Vault needs `kill -HUP $(pidof vault)` in each pod (PID 1 is a shell that ignores HUP —
 don't restart, it reseals), and clients that load the CA once at startup (VSO, gitea-runner,
-authentik, image-updater, spyal) need a restart.
+authentik, image-updater, spyal, chess) need a restart.
 
 ## Networking / exposure
 

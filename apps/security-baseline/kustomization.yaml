@@ -29,5 +29,6 @@ resources:
   - resource-limits/cntdwn.yaml
   - resource-limits/programmingclub.yaml
   - resource-limits/spyal.yaml
+  - resource-limits/chess.yaml
   - resource-limits/whoami.yaml
   - resource-limits/velero.yaml
