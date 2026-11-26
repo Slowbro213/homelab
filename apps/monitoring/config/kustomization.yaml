@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - prometheus-rule-alertmanager-test.yaml
   - prometheus-rule-node-health.yaml
+  - prometheus-rule-node-down.yaml
   - alertmanagerconfig-discord.yaml
   - grafana-dashboard-node-health.yaml
   - servicemonitor-smartctl-exporter.yaml
