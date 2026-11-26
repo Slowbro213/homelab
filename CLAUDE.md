@@ -152,6 +152,14 @@ into a single unnamed group. Falco rule exceptions go in `customRules` in `apps/
 `kubectl -n falco exec <falco-pod> -c falco -- falco --validate /etc/falco/falco_rules.yaml --validate <file>`
 before committing.
 
+The main Prometheus is single-replica with its only Longhorn replica on tux, so it dies with
+tux. A second, minimal `Prometheus` CR, `watchdog` (`apps/monitoring/config/prometheus-watchdog.yaml`),
+has required anti-affinity against the main one, so it always runs on the other node. It
+scrapes only node-exporter, loads only `PrometheusRule`s labelled `prometheus-watchdog: "true"`
+(today just `node-down`), and keeps 2h in an `emptyDir`. When both Prometheuses are up and a
+node-exporter alone fails, `NodeDown` arrives twice in Discord (different `prometheus` external
+label); that is expected. Don't add rules to the watchdog casually — its point is to stay tiny.
+
 ## CI/CD for application repos
 
 This repo has no CI workflows of its own. Application source repos (frontends, tools) run their
