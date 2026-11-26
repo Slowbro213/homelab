@@ -72,3 +72,20 @@ dedupe them — two Discord messages. Accepted; no relabeling.
 3. Measure actual memory with `kubectl top pod` and adjust the limit if needed.
 4. Live test (shared with the alert-agent spec): cleanly stop k3s on tux and expect
    `NodeDown` in Discord within about 3 minutes, then a resolved message after tux returns.
+
+## Amendment (2026-11-26, after the live test): Alertmanager storage → emptyDir
+
+The live power-off test delivered FIRING (tux off 19:05:02, firing 19:07:53, Discord ~19:08)
+but **no RESOLVED**. Both Alertmanager replicas' single-replica Longhorn volumes lived on tux.
+When tux returned, Longhorn salvaged the volumes and requested a remount, which recreated the
+cachyos Alertmanager pod mid-alert; its notification log was gone, so the resolved notification
+had nothing to resolve and was never sent. Had that pod restarted *during* the outage, it could
+not have mounted its volume and FIRING would have been lost too.
+
+Fix: drop `alertmanagerSpec.storage` in `clusters/gentoo/apps/infra/monitoring.yaml`, so the
+operator uses `emptyDir`. Alertmanager's on-disk state is only the notification log and
+silences, and the two replicas gossip both; a restarted replica pulls them back from its peer
+on join. Silences are lost only if both replicas restart at once (accepted). The two old PVCs
+(reclaim `Retain`) are deleted after the rollout. No silences existed at the time of the change.
+
+Retest: repeat the power-off and expect both FIRING and RESOLVED in Discord.

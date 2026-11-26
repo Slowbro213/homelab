@@ -164,16 +164,6 @@ spec:
             alertmanagerConfigMatcherStrategy:
               type: None
 
-            storage:
-              volumeClaimTemplate:
-                spec:
-                  storageClassName: longhorn-rwo
-                  accessModes:
-                    - ReadWriteOnce
-                  resources:
-                    requests:
-                      storage: 1Gi
-
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
