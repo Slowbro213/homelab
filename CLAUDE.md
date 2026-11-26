@@ -159,6 +159,11 @@ scrapes only node-exporter, loads only `PrometheusRule`s labelled `prometheus-wa
 (today just `node-down`), and keeps 2h in an `emptyDir`. When both Prometheuses are up and a
 node-exporter alone fails, `NodeDown` arrives twice in Discord (different `prometheus` external
 label); that is expected. Don't add rules to the watchdog casually — its point is to stay tiny.
+Alertmanager (2 replicas, hard anti-affinity) runs on `emptyDir`, not Longhorn: with
+single-replica volumes both of its PVCs had landed on tux, and the remount when tux returned
+recreated the surviving pod, wiping its notification log, so RESOLVED was never sent. Its
+nflog and silences re-sync from the peer via gossip. Silences are lost only if both replicas
+restart together. Don't give it a Longhorn `storage` block again.
 
 ## CI/CD for application repos
 
